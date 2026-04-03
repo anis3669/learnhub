@@ -30,7 +30,7 @@
                         <a href="{{ url('/dashboard') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">Go to Dashboard</a>
                     @else
                         <a href="{{ route('login') }}" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Log in</a>
-                        <a href="{{ route('register') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">Get Started Free</a>
+                        <a href="{{ route('register') }}" class="bg-indigo-600 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:text-gray-900">Get Started Free</a>
                     @endauth
                 </div>
             </div>
@@ -51,7 +51,7 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="{{ route('register') }}" class="bg-white text-indigo-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-50 transition">
-                    Start Learning Free 🚀
+                    Start Learning Free 
                 </a>
                 <a href="#features" class="border-2 border-white/40 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition">
                     Explore Courses
