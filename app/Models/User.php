@@ -11,37 +11,66 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'name', 'email', 'password', 'points', 'avatar', 'bio',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class, 'teacher_id');
+    }
+
+    public function quizAttempts()
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
+    public function progress()
+    {
+        return $this->hasMany(UserProgress::class);
+    }
+
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'user_badges')->withPivot('earned_at')->withTimestamps();
+    }
+
+    public function discussionPosts()
+    {
+        return $this->hasMany(DiscussionPost::class);
+    }
+
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(Course::class, 'enrollments')->withPivot('progress_percent', 'completed_at')->withTimestamps();
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        $name = urlencode($this->name);
+        return "https://ui-avatars.com/api/?name={$name}&background=6366f1&color=fff&size=128";
+    }
+
+    public function getBestQuizScore()
+    {
+        return $this->quizAttempts()->max('score') ?? 0;
     }
 }
