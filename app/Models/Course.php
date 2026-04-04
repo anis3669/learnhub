@@ -2,22 +2,14 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-=======
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
->>>>>>> anis
 
 class Course extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-<<<<<<< HEAD
         'teacher_id', 'title', 'description', 'thumbnail', 'category',
         'level', 'is_published', 'duration_hours',
     ];
@@ -27,20 +19,10 @@ class Course extends Model
     ];
 
     public function teacher()
-=======
-        'title',
-        'description',
-        'thumbnail',
-        'teacher_id',
-    ];
-
-    public function teacher(): BelongsTo
->>>>>>> anis
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-<<<<<<< HEAD
     public function lessons()
     {
         return $this->hasMany(Lesson::class)->orderBy('order');
@@ -75,15 +57,4 @@ class Course extends Model
         $color = $colors[$this->id % count($colors)];
         return "https://via.placeholder.com/800x450/{$color}/ffffff?text=" . urlencode($this->title);
     }
-=======
-    public function lessons(): HasMany
-    {
-        return $this->hasMany(Lesson::class);
-    }
-
-    public function quizzes(): HasMany
-    {
-        return $this->hasMany(Quiz::class);
-    }
->>>>>>> anis
 }

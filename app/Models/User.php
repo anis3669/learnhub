@@ -26,26 +26,16 @@ class User extends Authenticatable
         ];
     }
 
-<<<<<<< HEAD
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class);
     }
 
     public function courses()
-=======
-    // ==================== RELATIONSHIPS ====================
-
-    /**
-     * Courses created by this teacher
-     */
-    public function coursesAsTeacher(): HasMany
->>>>>>> anis
     {
         return $this->hasMany(Course::class, 'teacher_id');
     }
 
-<<<<<<< HEAD
     public function quizAttempts()
     {
         return $this->hasMany(QuizAttempt::class);
@@ -84,13 +74,4 @@ class User extends Authenticatable
     {
         return $this->quizAttempts()->max('score') ?? 0;
     }
-=======
-    /**
-     * You can add more relationships later (e.g. enrolled courses for students)
-     */
-    // public function enrolledCourses()
-    // {
-    //     return $this->belongsToMany(Course::class, 'enrollments');
-    // }
->>>>>>> anis
 }

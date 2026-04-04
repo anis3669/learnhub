@@ -11,7 +11,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-<<<<<<< HEAD
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->alias([
@@ -19,15 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
-=======
-    ->withMiddleware(function (Middleware $middleware) {
-        
-        // Register Role Middleware
-        $middleware->alias([
-            'role' => RoleMiddleware::class,
-        ]);
-
->>>>>>> anis
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
