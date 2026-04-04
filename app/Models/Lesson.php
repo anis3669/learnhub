@@ -2,14 +2,21 @@
 
 namespace App\Models;
 
+<<<<<<< HEAD
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+=======
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+>>>>>>> anis
 
 class Lesson extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+<<<<<<< HEAD
         'course_id', 'title', 'description', 'video_url', 'content',
         'duration_minutes', 'order', 'is_published',
     ];
@@ -53,4 +60,16 @@ class Lesson extends Model
         }
         return $url;
     }
+=======
+        'course_id',
+        'title',
+        'video',
+        'duration',
+    ];
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+>>>>>>> anis
 }

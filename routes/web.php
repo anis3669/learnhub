@@ -14,8 +14,9 @@ Route::get('/', function () {
         return redirect()->route('student.dashboard');
     }
     return view('welcome');
-});
+})->name('home');
 
+<<<<<<< HEAD
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function() {
         $user = auth()->user();
@@ -24,11 +25,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('student.dashboard');
     })->name('dashboard');
 
+=======
+// Public Leaderboard
+Route::get('/leaderboard', function () {
+    return view('leaderboard');
+})->name('leaderboard');
+
+// ====================== ROLE PROTECTED ROUTES ======================
+Route::middleware('auth')->group(function () {
+
+    // STUDENT DASHBOARD - Only Student can access
+    Route::middleware('role:student')->group(function () {
+        Route::get('/student/dashboard', function () {
+            return view('livewire.student-dashboard');
+        })->name('student.dashboard');
+    });
+
+    // TEACHER DASHBOARD - Only Teacher can access
+    Route::middleware('role:teacher')->group(function () {
+        Route::get('/teacher/dashboard', function () {
+            return view('livewire.teacher-dashboard');
+        })->name('teacher.dashboard');
+    });
+
+    // Profile
+>>>>>>> anis
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+<<<<<<< HEAD
 // Student Routes
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
@@ -89,3 +116,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 require __DIR__.'/auth.php';
+=======
+require __DIR__.'/auth.php';
+>>>>>>> anis
