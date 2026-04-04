@@ -129,10 +129,6 @@
             <a href="{{ route('register') }}" class="bg-white text-indigo-700 px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-50 transition inline-block">
                 Create Free Account →
             </a>
-            <div class="mt-6 text-white/60 text-sm">
-                Demo accounts: student@learnhub.com | teacher@learnhub.com | admin@learnhub.com (password: <strong>password</strong>)
-            </div>
-        </div>
     </section>
 
     <!-- Footer -->
@@ -143,7 +139,7 @@
             </div>
             <span class="text-white font-semibold">LearnHub</span>
         </div>
-        <p class="text-sm">© {{ date('Y') }} LearnHub. Built with Laravel 12 + Tailwind CSS.</p>
+        <p class="text-sm">© {{ date('Y') }} LearnHub.</p>
     </footer>
 </body>
 </html>
