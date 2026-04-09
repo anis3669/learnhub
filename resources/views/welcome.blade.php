@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LearnHub - Modern Learning Platform</title>
+    <title>LearnHub - Modern E-Learning Platform</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800,900" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -178,9 +178,9 @@
             </div>
             <div class="grid md:grid-cols-3 gap-6">
                 @foreach([
-                    ['name'=>'Emma Wilson', 'role'=>'Computer Science Student', 'avatar'=>'EW', 'color'=>'bg-indigo-100 text-indigo-700', 'quote'=>'LearnHub completely changed how I study. The quizzes and leaderboard keep me motivated every single day.'],
-                    ['name'=>'Dr. Sarah Johnson', 'role'=>'Course Instructor', 'avatar'=>'SJ', 'color'=>'bg-purple-100 text-purple-700', 'quote'=>'Building courses on LearnHub is effortless. My students are more engaged than ever, and the progress analytics are invaluable.'],
-                    ['name'=>'Marcus Lee', 'role'=>'Full-Stack Developer', 'avatar'=>'ML', 'color'=>'bg-emerald-100 text-emerald-700', 'quote'=>'I landed my first dev job after completing three courses here. The structured content and instant quiz feedback made all the difference.'],
+                    ['name'=>'Anis Bastola', 'role'=>'Computer Science Student', 'avatar'=>'EW', 'color'=>'bg-indigo-100 text-indigo-700', 'quote'=>'LearnHub completely changed how I study. The quizzes and leaderboard keep me motivated every single day.'],
+                    ['name'=>'Dr.Karan Thapa', 'role'=>'Course Instructor', 'avatar'=>'SJ', 'color'=>'bg-purple-100 text-purple-700', 'quote'=>'Building courses on LearnHub is effortless. My students are more engaged than ever, and the progress analytics are invaluable.'],
+                    ['name'=>'Muansu Regmi', 'role'=>'Full-Stack Developer', 'avatar'=>'ML', 'color'=>'bg-emerald-100 text-emerald-700', 'quote'=>'I landed my first dev job after completing three courses here. The structured content and instant quiz feedback made all the difference.'],
                 ] as $t)
                 <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover">
                     <div class="flex items-center mb-5">

@@ -4,11 +4,14 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\AdminController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    if (auth()->check()) {
-        $user = auth()->user();
+    if (Auth::check()) {
+        /** @var User $user */
+        $user = Auth::user();
         if ($user->hasRole('admin')) return redirect()->route('admin.dashboard');
         if ($user->hasRole('teacher')) return redirect()->route('teacher.dashboard');
         return redirect()->route('student.dashboard');
@@ -18,7 +21,8 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function() {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
         if ($user->hasRole('admin')) return redirect()->route('admin.dashboard');
         if ($user->hasRole('teacher')) return redirect()->route('teacher.dashboard');
         return redirect()->route('student.dashboard');

@@ -27,37 +27,37 @@ class DatabaseSeeder extends Seeder
             Role::firstOrCreate(['name' => $role]);
         }
 
-        $admin = User::firstOrCreate(['email' => 'admin@learnhub.com'], [
+        $admin = User::updateOrCreate(['email' => 'admin@learnhub.com'], [
             'name' => 'Admin User', 'password' => Hash::make('password'), 'points' => 0, 'bio' => 'Platform Administrator',
         ]);
         $admin->syncRoles(['admin']);
 
-        $teacher1 = User::firstOrCreate(['email' => 'teacher@learnhub.com'], [
+        $teacher1 = User::updateOrCreate(['email' => 'teacher@learnhub.com'], [
             'name' => 'Dr. Sarah Johnson', 'password' => Hash::make('password'), 'points' => 500,
             'bio' => 'Senior Computer Science Professor with 10 years of experience.',
         ]);
         $teacher1->syncRoles(['teacher']);
 
-        $teacher2 = User::firstOrCreate(['email' => 'teacher2@learnhub.com'], [
+        $teacher2 = User::updateOrCreate(['email' => 'teacher2@learnhub.com'], [
             'name' => 'Prof. Michael Chen', 'password' => Hash::make('password'), 'points' => 350,
             'bio' => 'Web Development expert and full-stack developer.',
         ]);
         $teacher2->syncRoles(['teacher']);
 
         $studentData = [
-            ['name' => 'Alice Martinez', 'email' => 'alice@learnhub.com', 'points' => 850],
-            ['name' => 'Bob Williams', 'email' => 'bob@learnhub.com', 'points' => 720],
-            ['name' => 'Carol Davis', 'email' => 'carol@learnhub.com', 'points' => 650],
-            ['name' => 'David Lee', 'email' => 'david@learnhub.com', 'points' => 580],
-            ['name' => 'Emma Wilson', 'email' => 'emma@learnhub.com', 'points' => 920],
-            ['name' => 'Frank Brown', 'email' => 'frank@learnhub.com', 'points' => 430],
-            ['name' => 'Grace Kim', 'email' => 'grace@learnhub.com', 'points' => 770],
-            ['name' => 'Henry Taylor', 'email' => 'henry@learnhub.com', 'points' => 310],
-            ['name' => 'Student User', 'email' => 'student@learnhub.com', 'points' => 450],
+            ['name' => 'Alice Rai', 'email' => 'alice@learnhub.com', 'points' => 850],
+            ['name' => 'Bibek Yadav', 'email' => 'bibek@learnhub.com', 'points' => 720],
+            ['name' => 'Kushal Bhurtel', 'email' => 'kushal@learnhub.com', 'points' => 650],
+            ['name' => 'David Warner', 'email' => 'david@learnhub.com', 'points' => 580],
+            ['name' => 'Asif Sheikh', 'email' => 'asif@learnhub.com', 'points' => 920],
+            ['name' => 'Arif Sheikh', 'email' => 'arif@learnhub.com', 'points' => 430],
+            ['name' => 'Kim Jong', 'email' => 'kim@learnhub.com', 'points' => 770],
+            ['name' => 'Henry Klasein', 'email' => 'henry@learnhub.com', 'points' => 310],
+            ['name' => 'Student1', 'email' => 'student@learnhub.com', 'points' => 450],
         ];
         $students = [];
         foreach ($studentData as $sd) {
-            $s = User::firstOrCreate(['email' => $sd['email']], [
+            $s = User::updateOrCreate(['email' => $sd['email']], [
                 'name' => $sd['name'], 'password' => Hash::make('password'), 'points' => $sd['points'], 'bio' => 'Passionate learner.',
             ]);
             $s->syncRoles(['student']);
