@@ -9,6 +9,10 @@ RUN apt-get update && apt-get install -y \
  libicu-dev \
  && docker-php-ext-install intl zip pdo_mysql
 
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+ apt-get install -y nodejs
+
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -20,9 +24,16 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# Build frontend assets
+RUN npm install && npm run build
+
 EXPOSE 8080
 
 CMD php artisan key:generate --force && \
  php artisan storage:link && \
+ php artisan config:clear && \
+ php artisan route:clear && \
+ php artisan view:clear && \
+ php artisan optimize:clear && \
  php artisan migrate --force && \
  php artisan serve --host=0.0.0.0 --port=$PORT
