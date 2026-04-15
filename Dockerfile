@@ -30,11 +30,11 @@ RUN npm install && npm run build
 EXPOSE 8080
 
 CMD cp .env.example .env && \
-    php artisan key:generate --force && \
+ php artisan key:generate --force && \
  php artisan storage:link && \
  php artisan config:clear && \
  php artisan route:clear && \
  php artisan view:clear && \
  php artisan optimize:clear && \
  php artisan migrate --force && \
- php artisan serve --host=0.0.0.0 --port=$PORT
+ php -S 0.0.0.0:${PORT:-8080} -t public
