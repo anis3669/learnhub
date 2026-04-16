@@ -36,4 +36,5 @@ CMD cp .env.example .env && \
  php artisan route:clear && \
  php artisan view:clear && \
  php artisan optimize:clear && \
+ timeout 120 php artisan migrate --force || true && \
  php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
