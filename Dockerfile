@@ -32,7 +32,6 @@ EXPOSE 8080
 CMD cp .env.example .env && \
  php artisan key:generate --force 2>/dev/null || true && \
  php artisan storage:link 2>/dev/null || true && \
- timeout 120 php artisan migrate --force 2>/dev/null || true && \
  php artisan config:clear && \
  php artisan route:clear && \
  php artisan view:clear && \
