@@ -33,13 +33,13 @@ class DatabaseSeeder extends Seeder
         $admin->syncRoles(['admin']);
 
         $teacher1 = User::updateOrCreate(['email' => 'teacher@learnhub.com'], [
-            'name' => 'Dr. Sarah Johnson', 'password' => Hash::make('password'), 'points' => 500,
+            'name' => 'Dr.Karan Thapa', 'password' => Hash::make('password'), 'points' => 500,
             'bio' => 'Senior Computer Science Professor with 10 years of experience.',
         ]);
         $teacher1->syncRoles(['teacher']);
 
         $teacher2 = User::updateOrCreate(['email' => 'teacher2@learnhub.com'], [
-            'name' => 'Prof. Michael Chen', 'password' => Hash::make('password'), 'points' => 350,
+            'name' => 'Prof.Muansu Regmi ', 'password' => Hash::make('password'), 'points' => 350,
             'bio' => 'Web Development expert and full-stack developer.',
         ]);
         $teacher2->syncRoles(['teacher']);
