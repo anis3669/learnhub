@@ -11,12 +11,24 @@ LearnHub is a Laravel 12 e-learning platform with role-based dashboards, courses
 
 ## Setup
 
-```bash
-composer install
+# 1. Copy environment file
 cp .env.example .env
-php artisan key:generate
-php artisan migrate
+
+# 2. Install dependencies
+composer install
 npm install
+
+# 3. Generate app key
+php artisan key:generate
+
+# 4. Run migrations
+php artisan migrate
+
+# 5. (Optional) Seed roles
+php artisan db:seed:RoleSeeder
+
+# 6. Start development
+composer run dev  # Starts server + queue + vite
 ```
 
 ## Run
