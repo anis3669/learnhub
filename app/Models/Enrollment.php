@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Enrollment extends Model
 {
-    protected $fillable = ['user_id', 'course_id', 'completed_at', 'progress_percent'];
+    protected $fillable = [
+        'user_id', 'course_id', 'completed_at',
+        'progress_percent', 'prerequisites_met',
+    ];
 
     protected $casts = [
-        'completed_at' => 'datetime',
+        'completed_at'      => 'datetime',
+        'prerequisites_met' => 'boolean',
     ];
 
     public function user()

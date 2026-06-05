@@ -12,6 +12,9 @@
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
     Browse Courses
 </a>
+<a href="{{ route('student.skill-assessment') }}" class="sidebar-link">
+    🧩 Skill Assessment
+</a>
 <a href="{{ route('student.leaderboard') }}" class="sidebar-link">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
     Leaderboard
@@ -24,6 +27,23 @@
 
 @section('content')
 <div class="space-y-6">
+
+    <!-- Skill assessment banner -->
+    @if(!session('_previous'))
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-2xl p-5 text-white flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="text-3xl">🧩</div>
+            <div>
+                <div class="font-bold">Not sure which course is right for you?</div>
+                <div class="text-indigo-200 text-sm mt-0.5">Take our 10-question skill assessment and get personalized course recommendations.</div>
+            </div>
+        </div>
+        <a href="{{ route('student.skill-assessment') }}" class="bg-white text-indigo-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-indigo-50 transition flex-shrink-0">
+            Take Assessment →
+        </a>
+    </div>
+    @endif
+
     <!-- Filters -->
     <form method="GET" class="card p-4">
         <div class="flex flex-col md:flex-row gap-4">
@@ -52,10 +72,21 @@
     <!-- Courses grid -->
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse($courses as $course)
+        @php
+            $prereqs = $course->prerequisiteCourses ?? collect();
+            $isEnrolled = in_array($course->id, $enrolledIds);
+            $isCompleted = in_array($course->id, $completedIds);
+            $hasPrereqs = $prereqs->isNotEmpty();
+        @endphp
         <div class="card overflow-hidden hover:shadow-md transition-shadow">
-            <div class="h-40 bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-5xl">
+            <div class="h-40 bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-5xl relative">
                 @php $icons = ['Programming'=>'💻','Web Development'=>'🌐','Computer Science'=>'🔬','AI & ML'=>'🤖','General'=>'📚']; @endphp
                 {{ $icons[$course->category] ?? '📖' }}
+                @if($isCompleted)
+                <div class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">✅ Done</div>
+                @elseif($isEnrolled)
+                <div class="absolute top-2 right-2 bg-indigo-500 text-white text-xs px-2 py-1 rounded-full font-bold">In Progress</div>
+                @endif
             </div>
             <div class="p-5">
                 <div class="flex items-center gap-2 mb-2">
@@ -64,17 +95,35 @@
                 </div>
                 <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">{{ $course->title }}</h3>
                 <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ $course->description }}</p>
+
+                <!-- Prerequisites -->
+                @if($hasPrereqs)
+                <div class="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div class="text-xs font-semibold text-amber-700 mb-1">⚠ Prerequisites Required</div>
+                    @foreach($prereqs as $prereq)
+                    @php $prereqDone = in_array($prereq->id, $completedIds); @endphp
+                    <div class="flex items-center gap-1.5 text-xs {{ $prereqDone ? 'text-green-600' : 'text-amber-600' }}">
+                        {{ $prereqDone ? '✅' : '○' }} {{ $prereq->title }}
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+
                 <div class="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <span>👨‍🏫 {{ $course->teacher->name }}</span>
                     <span>{{ $course->lessons_count }} lessons</span>
                     <span>👥 {{ $course->enrollments_count }}</span>
                 </div>
-                @if(in_array($course->id, $enrolledIds))
+
+                @if($isEnrolled)
                     <a href="{{ route('student.course.show', $course) }}" class="block text-center btn-primary w-full">Continue Learning →</a>
                 @else
                     <form action="{{ route('student.enroll', $course) }}" method="POST">
                         @csrf
-                        <button class="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">Enroll Free</button>
+                        <button class="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition
+                            {{ $hasPrereqs ? 'opacity-90' : '' }}">
+                            {{ $hasPrereqs ? '🔒 Enroll (Prerequisites Apply)' : 'Enroll Free' }}
+                        </button>
                     </form>
                 @endif
             </div>

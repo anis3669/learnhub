@@ -41,6 +41,9 @@
                     <div class="flex items-center gap-2 mb-2">
                         <span class="badge-pill bg-indigo-100 text-indigo-700">{{ $course->category }}</span>
                         <span class="badge-pill bg-gray-100 text-gray-700">{{ $course->level }}</span>
+                        @if($enrollment->completed_at)
+                        <span class="badge-pill bg-green-100 text-green-700">✅ Completed</span>
+                        @endif
                     </div>
                     <h2 class="text-xl font-bold text-gray-900">{{ $course->title }}</h2>
                     <p class="text-gray-600 mt-1">By {{ $course->teacher->name }}</p>
@@ -56,24 +59,91 @@
                 <div class="w-full bg-gray-200 rounded-full h-3">
                     <div class="bg-indigo-500 h-3 rounded-full transition-all" style="width: {{ $progress }}%"></div>
                 </div>
-                <div class="text-xs text-gray-500 mt-2">{{ $lessons->where('progress.0.is_completed', true)->count() }} of {{ $lessons->count() }} lessons completed</div>
+                <div class="text-xs text-gray-500 mt-2">
+                    {{ $lessons->filter(fn($l) => optional($l->progress->first())->is_completed)->count() }} of {{ $lessons->count() }} lessons completed
+                    @if($progress < 100)
+                    • Watch 95% of each video to mark lessons complete
+                    @endif
+                </div>
             </div>
         </div>
+
+        <!-- Final Exam CTA (shown once all lessons completed) -->
+        @if($enrollment->completed_at)
+        @if($passedFinalExam)
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">🏆</div>
+                <div class="flex-1">
+                    <h3 class="font-extrabold text-lg">Final Exam Passed!</h3>
+                    <p class="text-green-100 text-sm mt-1">Congratulations! You have fully completed this course.</p>
+                </div>
+                <a href="{{ route('student.recommendations') }}" class="bg-white text-green-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-green-50 transition flex-shrink-0">
+                    Find Next Course →
+                </a>
+            </div>
+        </div>
+        @elseif($bankCount >= 20)
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 rounded-2xl p-6 text-white">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">🎯</div>
+                <div class="flex-1">
+                    <h3 class="font-extrabold text-lg">Final Exam Unlocked!</h3>
+                    <p class="text-red-100 text-sm mt-1">All lessons complete. Take the 20-question final exam. Score 75% (15/20) to pass and earn +100 points!</p>
+                </div>
+                <a href="{{ route('student.final-exam', $course) }}" class="bg-white text-red-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-red-50 transition flex-shrink-0 whitespace-nowrap">
+                    Start Final Exam →
+                </a>
+            </div>
+        </div>
+        @else
+        <div class="bg-gradient-to-r from-gray-600 to-gray-700 rounded-2xl p-6 text-white opacity-70">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">📋</div>
+                <div>
+                    <h3 class="font-extrabold text-lg">Final Exam Coming Soon</h3>
+                    <p class="text-gray-300 text-sm mt-1">The instructor is still building the exam question bank for this course.</p>
+                </div>
+            </div>
+        </div>
+        @endif
+        @elseif($progress >= 80)
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-5">
+            <div class="flex items-center gap-3 text-indigo-700">
+                <div class="text-2xl">⚡</div>
+                <div>
+                    <div class="font-bold">Almost There!</div>
+                    <div class="text-sm text-indigo-600 mt-0.5">Complete all lessons to unlock the final exam and earn your course certificate.</div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Lessons -->
         <div class="card p-6">
             <h3 class="font-semibold text-gray-900 mb-4">📹 Course Lessons</h3>
             <div class="space-y-2">
                 @foreach($lessons as $i => $lesson)
-                @php $completed = optional($lesson->progress->first())->is_completed; @endphp
+                @php
+                    $completed  = optional($lesson->progress->first())->is_completed;
+                    $watchPct   = optional($lesson->progress->first())->watch_percent ?? 0;
+                @endphp
                 <a href="{{ route('student.lesson', [$course, $lesson]) }}" class="flex items-center space-x-4 p-4 rounded-xl border {{ $completed ? 'border-green-200 bg-green-50' : 'border-gray-100 hover:border-indigo-200 hover:bg-indigo-50' }} transition group">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 {{ $completed ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-indigo-500 group-hover:text-white' }}">
                         {{ $completed ? '✓' : $i+1 }}
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <div class="font-medium text-gray-900 group-hover:text-indigo-700">{{ $lesson->title }}</div>
                         @if($lesson->description)
                         <div class="text-xs text-gray-500 mt-0.5">{{ Str::limit($lesson->description, 80) }}</div>
+                        @endif
+                        @if(!$completed && $watchPct > 0)
+                        <div class="flex items-center gap-2 mt-1.5">
+                            <div class="flex-1 bg-gray-200 rounded-full h-1.5">
+                                <div class="bg-indigo-400 h-1.5 rounded-full" style="width: {{ $watchPct }}%"></div>
+                            </div>
+                            <span class="text-xs text-gray-400">{{ $watchPct }}% watched</span>
+                        </div>
                         @endif
                     </div>
                     <div class="text-xs text-gray-500 flex-shrink-0">{{ $lesson->duration_minutes }}min</div>
@@ -109,6 +179,33 @@
 
     <!-- Sidebar -->
     <div class="space-y-6">
+        <!-- Quick stats -->
+        <div class="card p-5">
+            <h3 class="font-semibold text-gray-900 mb-4">📊 Your Progress</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Lessons Done</span>
+                    <span class="font-bold">{{ $lessons->filter(fn($l) => optional($l->progress->first())->is_completed)->count() }}/{{ $lessons->count() }}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Enrolled</span>
+                    <span class="text-gray-500">{{ $enrollment->created_at->format('M j, Y') }}</span>
+                </div>
+                @if($enrollment->completed_at)
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Lessons Completed</span>
+                    <span class="font-bold text-green-600">{{ $enrollment->completed_at->format('M j, Y') }}</span>
+                </div>
+                @endif
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Final Exam</span>
+                    <span class="font-bold {{ $passedFinalExam ? 'text-green-600' : ($enrollment->completed_at ? 'text-orange-500' : 'text-gray-400') }}">
+                        {{ $passedFinalExam ? '✅ Passed' : ($enrollment->completed_at ? '⚡ Unlocked' : '🔒 Locked') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <!-- Discussion preview -->
         <div class="card p-6">
             <div class="flex items-center justify-between mb-4">

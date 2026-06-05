@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SkillAssessmentController;
+use App\Http\Controllers\FinalExamController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,7 +19,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function() {
+    Route::get('/dashboard', function () {
         $user = auth()->user();
         if ($user->hasRole('admin')) return redirect()->route('admin.dashboard');
         if ($user->hasRole('teacher')) return redirect()->route('teacher.dashboard');
@@ -37,6 +39,7 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/courses/{course}', [StudentController::class, 'showCourse'])->name('course.show');
     Route::get('/courses/{course}/lessons/{lesson}', [StudentController::class, 'watchLesson'])->name('lesson');
     Route::post('/courses/{course}/lessons/{lesson}/complete', [StudentController::class, 'markComplete'])->name('lesson.complete');
+    Route::post('/lessons/{lesson}/progress', [StudentController::class, 'updateProgress'])->name('lesson.progress');
     Route::get('/courses/{course}/quiz/{quiz}', [StudentController::class, 'takeQuiz'])->name('quiz');
     Route::post('/courses/{course}/quiz/{quiz}/submit', [StudentController::class, 'submitQuiz'])->name('quiz.submit');
     Route::get('/courses/{course}/quiz/{quiz}/result/{attempt}', [StudentController::class, 'quizResult'])->name('quiz.result');
@@ -45,6 +48,16 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::post('/discussion/{post}/reply', [StudentController::class, 'replyDiscussion'])->name('discussion.reply');
     Route::get('/leaderboard', [StudentController::class, 'leaderboard'])->name('leaderboard');
     Route::get('/badges', [StudentController::class, 'badges'])->name('badges');
+
+    // Skill Assessment
+    Route::get('/skill-assessment', [SkillAssessmentController::class, 'show'])->name('skill-assessment');
+    Route::post('/skill-assessment', [SkillAssessmentController::class, 'submit'])->name('skill-assessment.submit');
+    Route::get('/recommendations', [SkillAssessmentController::class, 'recommendations'])->name('recommendations');
+
+    // Final Exam
+    Route::get('/courses/{course}/final-exam', [FinalExamController::class, 'show'])->name('final-exam');
+    Route::post('/courses/{course}/final-exam/{attempt}/submit', [FinalExamController::class, 'submit'])->name('final-exam.submit');
+    Route::get('/courses/{course}/final-exam/{attempt}/result', [FinalExamController::class, 'result'])->name('final-exam.result');
 });
 
 // Teacher Routes
@@ -88,4 +101,4 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/badges/{badge}', [AdminController::class, 'deleteBadge'])->name('badge.delete');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

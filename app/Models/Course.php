@@ -35,7 +35,9 @@ class Course extends Model
 
     public function students()
     {
-        return $this->belongsToMany(User::class, 'enrollments')->withPivot('progress_percent', 'completed_at')->withTimestamps();
+        return $this->belongsToMany(User::class, 'enrollments')
+            ->withPivot('progress_percent', 'completed_at', 'prerequisites_met')
+            ->withTimestamps();
     }
 
     public function quizzes()
@@ -46,6 +48,31 @@ class Course extends Model
     public function discussions()
     {
         return $this->hasMany(DiscussionPost::class)->latest();
+    }
+
+    public function prerequisites()
+    {
+        return $this->hasMany(CoursePrerequisite::class);
+    }
+
+    public function prerequisiteCourses()
+    {
+        return $this->belongsToMany(
+            Course::class,
+            'course_prerequisites',
+            'course_id',
+            'prerequisite_course_id'
+        );
+    }
+
+    public function questionBank()
+    {
+        return $this->hasMany(QuestionBank::class);
+    }
+
+    public function finalExamAttempts()
+    {
+        return $this->hasMany(FinalExamAttempt::class);
     }
 
     public function getThumbnailUrlAttribute()

@@ -14,6 +14,8 @@ use App\Models\Badge;
 use App\Models\DiscussionPost;
 use App\Models\DiscussionReply;
 use App\Models\User;
+use App\Models\CoursePrerequisite;
+use App\Models\FinalExamAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,13 +32,14 @@ class StudentController extends Controller
         $badges = $user->badges()->latest('user_badges.created_at')->get();
         $leaderboard = $this->getLeaderboardTop(5);
         $rank = $this->getUserRank($user->id);
-        return view('student.dashboard', compact('user', 'enrollments', 'recentAttempts', 'badges', 'leaderboard', 'rank'));
+        $lastAssessment = \App\Models\SkillAssessment::where('user_id', $user->id)->latest()->first();
+        return view('student.dashboard', compact('user', 'enrollments', 'recentAttempts', 'badges', 'leaderboard', 'rank', 'lastAssessment'));
     }
 
     public function courses(Request $request)
     {
         $user = Auth::user();
-        $query = Course::with('teacher')->where('is_published', true);
+        $query = Course::with('teacher', 'prerequisiteCourses')->where('is_published', true);
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
         }
@@ -48,15 +51,38 @@ class StudentController extends Controller
         }
         $courses = $query->withCount('enrollments', 'lessons')->latest()->paginate(12);
         $enrolledIds = $user->enrollments()->pluck('course_id')->toArray();
+        $completedIds = $user->enrollments()->whereNotNull('completed_at')->pluck('course_id')->toArray();
         $categories = Course::where('is_published', true)->distinct()->pluck('category');
-        return view('student.courses', compact('courses', 'enrolledIds', 'categories'));
+        return view('student.courses', compact('courses', 'enrolledIds', 'completedIds', 'categories'));
     }
 
     public function enroll(Course $course)
     {
         $user = Auth::user();
-        Enrollment::firstOrCreate(['user_id' => $user->id, 'course_id' => $course->id], ['progress_percent' => 0]);
-        return redirect()->route('student.course.show', $course)->with('success', "Enrolled in \"{$course->title}\" successfully!");
+
+        $prerequisites = CoursePrerequisite::where('course_id', $course->id)->with('prerequisiteCourse')->get();
+
+        if ($prerequisites->isNotEmpty()) {
+            foreach ($prerequisites as $prereq) {
+                $completed = Enrollment::where('user_id', $user->id)
+                    ->where('course_id', $prereq->prerequisite_course_id)
+                    ->whereNotNull('completed_at')
+                    ->exists();
+
+                if (!$completed) {
+                    return redirect()->route('student.courses')
+                        ->with('error', "You must complete \"{$prereq->prerequisiteCourse->title}\" before enrolling in this course.");
+                }
+            }
+        }
+
+        Enrollment::firstOrCreate(
+            ['user_id' => $user->id, 'course_id' => $course->id],
+            ['progress_percent' => 0, 'prerequisites_met' => true]
+        );
+
+        return redirect()->route('student.course.show', $course)
+            ->with('success', "Enrolled in \"{$course->title}\" successfully!");
     }
 
     public function showCourse(Course $course)
@@ -67,12 +93,26 @@ class StudentController extends Controller
             return redirect()->route('student.courses')->with('error', 'Please enroll in the course first.');
         }
         $lessons = $course->lessons()->with(['progress' => fn($q) => $q->where('user_id', $user->id)])->get();
-        $quizzes = $course->quizzes()->where('is_published', true)->with(['attempts' => fn($q) => $q->where('user_id', $user->id)])->get();
-        $posts = DiscussionPost::with('user', 'replies')->where('course_id', $course->id)->latest()->take(5)->get();
+        $quizzes = $course->quizzes()->where('is_published', true)
+            ->with(['attempts' => fn($q) => $q->where('user_id', $user->id)])->get();
+        $posts = DiscussionPost::with('user', 'replies')
+            ->where('course_id', $course->id)->latest()->take(5)->get();
         $completedCount = $lessons->filter(fn($l) => $l->progress->isNotEmpty() && $l->progress->first()->is_completed)->count();
         $progress = $lessons->count() > 0 ? round(($completedCount / $lessons->count()) * 100) : 0;
-        Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->update(['progress_percent' => $progress]);
-        return view('student.course-show', compact('course', 'enrollment', 'lessons', 'quizzes', 'posts', 'progress'));
+        Enrollment::where('user_id', $user->id)->where('course_id', $course->id)
+            ->update(['progress_percent' => $progress]);
+
+        $passedFinalExam = FinalExamAttempt::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->where('passed', true)
+            ->exists();
+
+        $bankCount = \App\Models\QuestionBank::where('course_id', $course->id)->count();
+
+        return view('student.course-show', compact(
+            'course', 'enrollment', 'lessons', 'quizzes', 'posts',
+            'progress', 'passedFinalExam', 'bankCount'
+        ));
     }
 
     public function watchLesson(Course $course, Lesson $lesson)
@@ -82,27 +122,82 @@ class StudentController extends Controller
         if (!$enrollment) return redirect()->route('student.courses');
         $prev = $course->lessons()->where('order', '<', $lesson->order)->orderByDesc('order')->first();
         $next = $course->lessons()->where('order', '>', $lesson->order)->orderBy('order')->first();
-        $userProgress = UserProgress::firstOrCreate(['user_id' => $user->id, 'lesson_id' => $lesson->id], ['watch_percent' => 0]);
+        $userProgress = UserProgress::firstOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+            ['watch_percent' => 0]
+        );
         $quiz = $lesson->quiz()->where('is_published', true)->first();
         return view('student.lesson', compact('course', 'lesson', 'prev', 'next', 'userProgress', 'quiz'));
+    }
+
+    public function updateProgress(Request $request, Lesson $lesson)
+    {
+        $request->validate(['watch_percent' => 'required|integer|min:0|max:100']);
+        $user = Auth::user();
+
+        $progress = UserProgress::firstOrCreate(
+            ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+            ['watch_percent' => 0]
+        );
+
+        if ($request->watch_percent > $progress->watch_percent) {
+            $progress->update(['watch_percent' => $request->watch_percent]);
+        }
+
+        return response()->json([
+            'watch_percent' => $progress->fresh()->watch_percent,
+            'can_complete'  => $progress->fresh()->watch_percent >= 95,
+        ]);
     }
 
     public function markComplete(Course $course, Lesson $lesson)
     {
         $user = Auth::user();
+
+        $progress = UserProgress::where('user_id', $user->id)
+            ->where('lesson_id', $lesson->id)
+            ->first();
+
+        if (!$progress || $progress->watch_percent < 95) {
+            return redirect()->back()
+                ->with('error', 'You must watch at least 95% of the video before marking complete.');
+        }
+
         UserProgress::updateOrCreate(
             ['user_id' => $user->id, 'lesson_id' => $lesson->id],
             ['is_completed' => true, 'watch_percent' => 100, 'completed_at' => now()]
         );
+
         $user->increment('points', 20);
         $this->checkAndAwardBadges($user);
+
         $totalLessons = $course->lessons()->count();
-        $completedLessons = UserProgress::where('user_id', $user->id)->whereIn('lesson_id', $course->lessons()->pluck('id'))->where('is_completed', true)->count();
-        $progress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
-        Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->update(['progress_percent' => $progress]);
+        $completedLessons = UserProgress::where('user_id', $user->id)
+            ->whereIn('lesson_id', $course->lessons()->pluck('id'))
+            ->where('is_completed', true)
+            ->count();
+        $courseProgress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+
+        $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
+
+        if ($completedLessons === $totalLessons && $totalLessons > 0 && !$enrollment->completed_at) {
+            $enrollment->update([
+                'progress_percent' => 100,
+                'completed_at'     => now(),
+            ]);
+            $user->increment('points', 100);
+            $this->checkAndAwardBadges($user);
+            $message = '🎉 Course completed! +20 pts for lesson, +100 pts for completing the course! Final exam unlocked!';
+        } else {
+            $enrollment->update(['progress_percent' => $courseProgress]);
+            $message = 'Lesson completed! +20 points 🎉';
+        }
+
         $next = $course->lessons()->where('order', '>', $lesson->order)->orderBy('order')->first();
-        if ($next) return redirect()->route('student.lesson', [$course, $next])->with('success', 'Lesson completed! +20 points 🎉');
-        return redirect()->route('student.course.show', $course)->with('success', 'Lesson completed! +20 points 🎉');
+        if ($next) {
+            return redirect()->route('student.lesson', [$course, $next])->with('success', $message);
+        }
+        return redirect()->route('student.course.show', $course)->with('success', $message);
     }
 
     public function takeQuiz(Course $course, Quiz $quiz)
@@ -129,10 +224,15 @@ class StudentController extends Controller
                 $isCorrect = $option && $option->is_correct;
                 if ($isCorrect) $score += $question->points;
             }
-            AttemptAnswer::create(['attempt_id' => $attempt->id, 'question_id' => $question->id, 'selected_option_id' => $selectedId ?: null, 'is_correct' => $isCorrect]);
+            AttemptAnswer::create([
+                'attempt_id'        => $attempt->id,
+                'question_id'       => $question->id,
+                'selected_option_id'=> $selectedId ?: null,
+                'is_correct'        => $isCorrect,
+            ]);
         }
         $percent = $totalPoints > 0 ? round(($score / $totalPoints) * 100) : 0;
-        $passed = $percent >= $quiz->passing_score;
+        $passed  = $percent >= $quiz->passing_score;
         $attempt->update(['score' => $score, 'total_points' => $totalPoints, 'passed' => $passed, 'completed_at' => now()]);
         $pointsEarned = $passed ? 50 : 10;
         $user->increment('points', $pointsEarned);
@@ -162,7 +262,8 @@ class StudentController extends Controller
         $user = Auth::user();
         $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
         if (!$enrollment) return redirect()->route('student.courses');
-        $posts = DiscussionPost::with('user', 'replies.user')->where('course_id', $course->id)->orderByDesc('is_pinned')->latest()->get();
+        $posts = DiscussionPost::with('user', 'replies.user')
+            ->where('course_id', $course->id)->orderByDesc('is_pinned')->latest()->get();
         return view('student.discussion', compact('course', 'posts'));
     }
 
@@ -186,8 +287,8 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         $earnedBadges = $user->badges()->withPivot('earned_at')->get();
-        $allBadges = Badge::all();
-        $earnedIds = $earnedBadges->pluck('id');
+        $allBadges    = Badge::all();
+        $earnedIds    = $earnedBadges->pluck('id');
         return view('student.badges', compact('user', 'earnedBadges', 'allBadges', 'earnedIds'));
     }
 
@@ -195,8 +296,8 @@ class StudentController extends Controller
     {
         $n = count($arr);
         if ($n <= 1) return $arr;
-        $mid = intdiv($n, 2);
-        $left = $this->mergeSort(array_slice($arr, 0, $mid), $key);
+        $mid   = intdiv($n, 2);
+        $left  = $this->mergeSort(array_slice($arr, 0, $mid), $key);
         $right = $this->mergeSort(array_slice($arr, $mid), $key);
         return $this->merge($left, $right, $key);
     }
@@ -217,7 +318,7 @@ class StudentController extends Controller
 
     private function getLeaderboardTop(int $limit): array
     {
-        $users = User::role('student')->select('id', 'name', 'points', 'avatar')->get()->toArray();
+        $users  = User::role('student')->select('id', 'name', 'points', 'avatar')->get()->toArray();
         $sorted = array_reverse($this->mergeSort($users, 'points'));
         return array_slice(array_values($sorted), 0, $limit);
     }
@@ -225,7 +326,7 @@ class StudentController extends Controller
     private function getUserRank(int $userId): int
     {
         $users = User::role('student')->orderByDesc('points')->pluck('id')->toArray();
-        $rank = array_search($userId, $users);
+        $rank  = array_search($userId, $users);
         return $rank !== false ? $rank + 1 : 0;
     }
 
@@ -237,14 +338,20 @@ class StudentController extends Controller
         foreach ($badges as $badge) {
             if (in_array($badge->id, $earned)) continue;
             $award = match($badge->criteria_type) {
-                'points' => $user->points >= $badge->criteria_value,
+                'points'            => $user->points >= $badge->criteria_value,
                 'lessons_completed' => UserProgress::where('user_id', $user->id)->where('is_completed', true)->count() >= $badge->criteria_value,
                 'courses_completed' => Enrollment::where('user_id', $user->id)->whereNotNull('completed_at')->count() >= $badge->criteria_value,
-                'enrollments' => Enrollment::where('user_id', $user->id)->count() >= $badge->criteria_value,
-                default => false,
+                'enrollments'       => Enrollment::where('user_id', $user->id)->count() >= $badge->criteria_value,
+                default             => false,
             };
             if ($award) {
-                DB::table('user_badges')->insertOrIgnore(['user_id' => $user->id, 'badge_id' => $badge->id, 'earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
+                DB::table('user_badges')->insertOrIgnore([
+                    'user_id'    => $user->id,
+                    'badge_id'   => $badge->id,
+                    'earned_at'  => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         }
     }

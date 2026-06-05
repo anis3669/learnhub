@@ -21,7 +21,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 
@@ -47,7 +47,9 @@ class User extends Authenticatable
 
     public function badges()
     {
-        return $this->belongsToMany(Badge::class, 'user_badges')->withPivot('earned_at')->withTimestamps();
+        return $this->belongsToMany(Badge::class, 'user_badges')
+            ->withPivot('earned_at')
+            ->withTimestamps();
     }
 
     public function discussionPosts()
@@ -57,7 +59,19 @@ class User extends Authenticatable
 
     public function enrolledCourses()
     {
-        return $this->belongsToMany(Course::class, 'enrollments')->withPivot('progress_percent', 'completed_at')->withTimestamps();
+        return $this->belongsToMany(Course::class, 'enrollments')
+            ->withPivot('progress_percent', 'completed_at', 'prerequisites_met')
+            ->withTimestamps();
+    }
+
+    public function skillAssessment()
+    {
+        return $this->hasOne(SkillAssessment::class)->latest();
+    }
+
+    public function finalExamAttempts()
+    {
+        return $this->hasMany(FinalExamAttempt::class);
     }
 
     public function getAvatarUrlAttribute()
