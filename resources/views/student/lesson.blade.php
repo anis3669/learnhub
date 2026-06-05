@@ -61,7 +61,8 @@
             })
             .catch(() => { this.saving = false; });
         }
-     }">
+     }"
+     @video-progress.document="updateProgress($event.detail.percent)">
 
     <!-- Video Player -->
     <div class="card overflow-hidden">
@@ -253,17 +254,6 @@
     }
 })();
 </script>
-<script>
-document.addEventListener('video-progress', function(e) {
-    var alpineEl = document.querySelector('[x-data]');
-    if (alpineEl && alpineEl._x_dataStack) {
-        var data = Alpine.$data(alpineEl);
-        if (data && data.updateProgress) {
-            data.updateProgress(e.detail.percent);
-        }
-    }
-});
-</script>
 @endif
 
 @if($isVimeo && !$userProgress->is_completed)
@@ -279,11 +269,7 @@ document.addEventListener('video-progress', function(e) {
         var pct = Math.floor(data.percent * 100);
         if (pct > lastReported && pct % 5 === 0) {
             lastReported = pct;
-            var alpineEl = document.querySelector('[x-data]');
-            if (alpineEl) {
-                var xData = Alpine.$data(alpineEl);
-                if (xData && xData.updateProgress) xData.updateProgress(pct);
-            }
+            document.dispatchEvent(new CustomEvent('video-progress', { detail: { percent: pct } }));
         }
     });
 })();

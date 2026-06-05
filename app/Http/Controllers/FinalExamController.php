@@ -84,6 +84,10 @@ class FinalExamController extends Controller
             abort(403);
         }
 
+        if ($attempt->course_id !== $course->id) {
+            abort(403, 'This exam attempt does not belong to this course.');
+        }
+
         if ($attempt->completed_at) {
             return redirect()->route('student.final-exam.result', [$course, $attempt]);
         }
@@ -126,6 +130,7 @@ class FinalExamController extends Controller
     {
         $user = Auth::user();
         if ($attempt->user_id !== $user->id) abort(403);
+        if ($attempt->course_id !== $course->id) abort(403, 'This exam attempt does not belong to this course.');
 
         $attempt->load('answers.question');
 

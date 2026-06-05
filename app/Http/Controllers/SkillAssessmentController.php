@@ -26,13 +26,23 @@ class SkillAssessmentController extends Controller
 
     public function submit(Request $request)
     {
-        $request->validate(['answers' => 'required|array']);
+        $request->validate([
+            'answers'   => 'required|array|size:10',
+            'answers.*' => 'required|in:1,2,3,4',
+        ]);
 
-        $user      = Auth::user();
-        $answers   = $request->input('answers', []);
-        $score     = 0;
-        $total     = count($answers);
+        $user        = Auth::user();
+        $answers     = $request->input('answers', []);
         $questionIds = array_keys($answers);
+
+        $validCount = SkillAssessmentQuestion::whereIn('id', $questionIds)->count();
+        if ($validCount !== 10) {
+            return redirect()->route('student.skill-assessment')
+                ->with('error', 'Invalid assessment submission — please try again.');
+        }
+
+        $score     = 0;
+        $total     = 10;
         $questions = SkillAssessmentQuestion::whereIn('id', $questionIds)->get()->keyBy('id');
 
         foreach ($answers as $qId => $selected) {
