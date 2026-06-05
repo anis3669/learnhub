@@ -17,7 +17,7 @@ class QuestionBankSeeder extends Seeder
         $course4 = Course::where('title', 'like', '%Machine Learning%')->first();
 
         // ── Course 1: Python Programming ─────────────────────────────────────
-        if ($course1 && QuestionBank::where('course_id', $course1->id)->count() < 20) {
+        if ($course1 && QuestionBank::where('course_id', $course1->id)->count() < 30) {
             $pythonQs = [
                 ['q' => 'What is the output of print(type(3.14))?', 'a' => "<class 'int'>", 'b' => "<class 'float'>", 'c' => "<class 'double'>", 'd' => "<class 'number'>", 'correct' => 2],
                 ['q' => 'Which method removes the last element of a Python list?', 'a' => 'remove()', 'b' => 'delete()', 'c' => 'pop()', 'd' => 'discard()', 'correct' => 3],
@@ -44,6 +44,11 @@ class QuestionBankSeeder extends Seeder
                 ['q' => 'What is a generator in Python?', 'a' => 'A class that generates objects', 'b' => 'A function using yield to produce a sequence lazily', 'c' => 'A random number tool', 'd' => 'A file reader', 'correct' => 2],
                 ['q' => 'How do you convert a list to a set in Python?', 'a' => 'list.toSet()', 'b' => 'set(list)', 'c' => '{list}', 'd' => 'Set.from(list)', 'correct' => 2],
                 ['q' => 'Which of the following is immutable in Python?', 'a' => 'List', 'b' => 'Dictionary', 'c' => 'Set', 'd' => 'Tuple', 'correct' => 4],
+                ['q' => 'What is the difference between "==" and "is" in Python?', 'a' => 'No difference', 'b' => '"==" checks value equality; "is" checks identity (same object)', 'c' => '"is" checks value; "==" checks type', 'd' => '"is" is used for strings only', 'correct' => 2],
+                ['q' => 'What does the zip() function do in Python?', 'a' => 'Compresses files', 'b' => 'Combines iterables element-wise into tuples', 'c' => 'Sorts a list', 'd' => 'Filters a list', 'correct' => 2],
+                ['q' => 'Which decorator makes a method callable on the class itself?', 'a' => '@property', 'b' => '@abstractmethod', 'c' => '@staticmethod', 'd' => '@classmethod', 'correct' => 4],
+                ['q' => 'What does the "with" statement provide in Python?', 'a' => 'Loop control', 'b' => 'Context management — ensures clean-up (e.g., file close)', 'c' => 'Exception catching', 'd' => 'Module importing', 'correct' => 2],
+                ['q' => 'What is the output of bool("") in Python?', 'a' => 'True', 'b' => 'None', 'c' => 'Error', 'd' => 'False', 'correct' => 4],
             ];
             foreach ($pythonQs as $q) {
                 QuestionBank::firstOrCreate(
@@ -54,7 +59,7 @@ class QuestionBankSeeder extends Seeder
         }
 
         // ── Course 2: Laravel ─────────────────────────────────────────────────
-        if ($course2 && QuestionBank::where('course_id', $course2->id)->count() < 20) {
+        if ($course2 && QuestionBank::where('course_id', $course2->id)->count() < 30) {
             $laravelQs = [
                 ['q' => 'What command creates a new Laravel controller?', 'a' => 'php artisan new:controller', 'b' => 'php artisan make:controller', 'c' => 'laravel make controller', 'd' => 'php artisan create:controller', 'correct' => 2],
                 ['q' => 'What does Eloquent ORM stand for?', 'a' => 'A query builder only', 'b' => 'Laravel\'s built-in Active Record ORM', 'c' => 'An external PHP library', 'd' => 'A caching system', 'correct' => 2],
@@ -81,6 +86,11 @@ class QuestionBankSeeder extends Seeder
                 ['q' => 'Which Eloquent method finds a model by its primary key?', 'a' => 'get()', 'b' => 'first()', 'c' => 'where()', 'd' => 'find()', 'correct' => 4],
                 ['q' => 'What does "php artisan db:seed" do?', 'a' => 'Resets all tables', 'b' => 'Runs all database seeders', 'c' => 'Creates new tables', 'd' => 'Backs up the database', 'correct' => 2],
                 ['q' => 'What is the Blade templating engine?', 'a' => 'A CSS framework bundled with Laravel', 'b' => 'Laravel\'s built-in template engine for views', 'c' => 'A JavaScript compiler', 'd' => 'An external templating library', 'correct' => 2],
+                ['q' => 'How do you create a named route in Laravel?', 'a' => 'Route::get()->name("name")', 'b' => 'Route::name("name")->get()', 'c' => 'Route::label("name", ...)', 'd' => 'Route::alias("name", ...)', 'correct' => 1],
+                ['q' => 'What does "php artisan config:cache" do?', 'a' => 'Clears the route cache', 'b' => 'Combines all config files into a single cached file for speed', 'c' => 'Publishes config files', 'd' => 'Resets environment variables', 'correct' => 2],
+                ['q' => 'What is a pivot table in Laravel?', 'a' => 'A log table', 'b' => 'A table used to manage many-to-many relationships', 'c' => 'An Eloquent model without a table', 'd' => 'A cache store', 'correct' => 2],
+                ['q' => 'Which method sends a JSON response from a Laravel controller?', 'a' => 'return view()->json()', 'b' => 'return json($data)', 'c' => 'return response()->json($data)', 'd' => 'return output()->json($data)', 'correct' => 3],
+                ['q' => 'What does the "firstOrCreate" Eloquent method do?', 'a' => 'Always creates a new record', 'b' => 'Returns the first matching record or creates it if not found', 'c' => 'Finds by primary key only', 'd' => 'Updates an existing record', 'correct' => 2],
             ];
             foreach ($laravelQs as $q) {
                 QuestionBank::firstOrCreate(
@@ -88,18 +98,18 @@ class QuestionBankSeeder extends Seeder
                     ['option_a' => $q['a'], 'option_b' => $q['b'], 'option_c' => $q['c'], 'option_d' => $q['d'], 'correct_option' => $q['correct'], 'difficulty' => 'medium']
                 );
             }
+        }
 
-            // Add prerequisite: Python before Laravel
-            if ($course1) {
-                CoursePrerequisite::firstOrCreate([
-                    'course_id' => $course2->id,
-                    'prerequisite_course_id' => $course1->id,
-                ]);
-            }
+        // Always ensure prerequisite: Python before Laravel
+        if ($course1 && $course2) {
+            CoursePrerequisite::firstOrCreate([
+                'course_id' => $course2->id,
+                'prerequisite_course_id' => $course1->id,
+            ]);
         }
 
         // ── Course 3: Data Structures & Algorithms ────────────────────────────
-        if ($course3 && QuestionBank::where('course_id', $course3->id)->count() < 20) {
+        if ($course3 && QuestionBank::where('course_id', $course3->id)->count() < 30) {
             $dsaQs = [
                 ['q' => 'What data structure uses LIFO ordering?', 'a' => 'Queue', 'b' => 'Linked List', 'c' => 'Stack', 'd' => 'Tree', 'correct' => 3],
                 ['q' => 'What is the time complexity of accessing an element in an array?', 'a' => 'O(n)', 'b' => 'O(log n)', 'c' => 'O(n²)', 'd' => 'O(1)', 'correct' => 4],
@@ -126,6 +136,11 @@ class QuestionBankSeeder extends Seeder
                 ['q' => 'What does BFS stand for?', 'a' => 'Binary File Search', 'b' => 'Best First Search', 'c' => 'Breadth-First Search', 'd' => 'Balanced Function Sort', 'correct' => 3],
                 ['q' => 'What is the purpose of a priority queue?', 'a' => 'To store items in insertion order', 'b' => 'To serve elements with highest priority first', 'c' => 'To allow random access', 'd' => 'To sort items alphabetically', 'correct' => 2],
                 ['q' => 'In a binary search, what is the key requirement for the input?', 'a' => 'The array must be unsorted', 'b' => 'The array must be sorted', 'c' => 'The array must have an odd number of elements', 'd' => 'The array must have no duplicates', 'correct' => 2],
+                ['q' => 'What is the time complexity of binary search?', 'a' => 'O(n)', 'b' => 'O(n²)', 'c' => 'O(1)', 'd' => 'O(log n)', 'correct' => 4],
+                ['q' => 'What is a circular linked list?', 'a' => 'A list with no nodes', 'b' => 'A list where the last node points back to the first', 'c' => 'A doubly linked list', 'd' => 'A list stored in a circle on disk', 'correct' => 2],
+                ['q' => 'What is the best-case time complexity of QuickSort?', 'a' => 'O(n²)', 'b' => 'O(n)', 'c' => 'O(n log n)', 'd' => 'O(log n)', 'correct' => 3],
+                ['q' => 'In graph theory, what is a spanning tree?', 'a' => 'A tree that includes all vertices of the graph with minimum edges', 'b' => 'The longest path in a graph', 'c' => 'A cycle-free subgraph', 'd' => 'A directed path', 'correct' => 1],
+                ['q' => 'What does DFS stand for?', 'a' => 'Direct Function Search', 'b' => 'Data Field Structure', 'c' => 'Depth-First Search', 'd' => 'Dynamic File Scan', 'correct' => 3],
             ];
             foreach ($dsaQs as $q) {
                 QuestionBank::firstOrCreate(
@@ -136,7 +151,7 @@ class QuestionBankSeeder extends Seeder
         }
 
         // ── Course 4: Machine Learning ────────────────────────────────────────
-        if ($course4 && QuestionBank::where('course_id', $course4->id)->count() < 20) {
+        if ($course4 && QuestionBank::where('course_id', $course4->id)->count() < 30) {
             $mlQs = [
                 ['q' => 'What is supervised learning?', 'a' => 'Learning without any labels', 'b' => 'Learning where the model is trained on labelled input-output pairs', 'c' => 'Reinforcement-based training', 'd' => 'Clustering unlabeled data', 'correct' => 2],
                 ['q' => 'What is the loss function in machine learning?', 'a' => 'The accuracy score', 'b' => 'A measure of how wrong the model predictions are', 'c' => 'The number of training epochs', 'd' => 'The learning rate', 'correct' => 2],
@@ -163,6 +178,11 @@ class QuestionBankSeeder extends Seeder
                 ['q' => 'What is dropout in neural networks?', 'a' => 'Removing layers', 'b' => 'Randomly deactivating neurons during training to prevent overfitting', 'c' => 'Reducing the learning rate', 'd' => 'Skipping certain epochs', 'correct' => 2],
                 ['q' => 'What is the F1 score?', 'a' => 'Accuracy × Recall', 'b' => 'Precision + Recall', 'c' => 'Harmonic mean of Precision and Recall', 'd' => 'Accuracy on the test set', 'correct' => 3],
                 ['q' => 'What is a random forest?', 'a' => 'A single very deep decision tree', 'b' => 'An ensemble of decision trees trained on random subsets', 'c' => 'A clustering algorithm', 'd' => 'A neural network with random weights', 'correct' => 2],
+                ['q' => 'What is overfitting in machine learning?', 'a' => 'When a model performs poorly on training data', 'b' => 'When a model learns training data too well and fails to generalise', 'c' => 'When the learning rate is too low', 'd' => 'When the dataset is too large', 'correct' => 2],
+                ['q' => 'What is the purpose of a validation set?', 'a' => 'To train the model', 'b' => 'To tune hyperparameters and evaluate during training without using test data', 'c' => 'To augment data', 'd' => 'To normalise features', 'correct' => 2],
+                ['q' => 'What does KNN stand for?', 'a' => 'Kernel Node Network', 'b' => 'K Nearest Neighbours', 'c' => 'K-means Neural Network', 'd' => 'Keypoint Node Normaliser', 'correct' => 2],
+                ['q' => 'What is feature scaling?', 'a' => 'Reducing the number of features', 'b' => 'Normalising feature ranges so no feature dominates due to magnitude', 'c' => 'Selecting the most important features', 'd' => 'Encoding categorical variables', 'correct' => 2],
+                ['q' => 'What is a ROC curve used for?', 'a' => 'Plotting training loss over epochs', 'b' => 'Visualising the tradeoff between true positive rate and false positive rate', 'c' => 'Showing feature correlations', 'd' => 'Comparing multiple regression lines', 'correct' => 2],
             ];
             foreach ($mlQs as $q) {
                 QuestionBank::firstOrCreate(
@@ -170,14 +190,14 @@ class QuestionBankSeeder extends Seeder
                     ['option_a' => $q['a'], 'option_b' => $q['b'], 'option_c' => $q['c'], 'option_d' => $q['d'], 'correct_option' => $q['correct'], 'difficulty' => 'medium']
                 );
             }
+        }
 
-            // Prerequisite: DSA before ML
-            if ($course3) {
-                CoursePrerequisite::firstOrCreate([
-                    'course_id' => $course4->id,
-                    'prerequisite_course_id' => $course3->id,
-                ]);
-            }
+        // Always ensure prerequisite: DSA before ML
+        if ($course3 && $course4) {
+            CoursePrerequisite::firstOrCreate([
+                'course_id' => $course4->id,
+                'prerequisite_course_id' => $course3->id,
+            ]);
         }
 
         $this->command->info('✅ QuestionBankSeeder complete.');

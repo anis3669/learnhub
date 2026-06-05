@@ -77,6 +77,8 @@
             $isEnrolled = in_array($course->id, $enrolledIds);
             $isCompleted = in_array($course->id, $completedIds);
             $hasPrereqs = $prereqs->isNotEmpty();
+            $unmetPrereqs = $prereqs->filter(fn($p) => !in_array($p->id, $completedIds));
+            $hasUnmetPrereqs = $unmetPrereqs->isNotEmpty();
         @endphp
         <div class="card overflow-hidden hover:shadow-md transition-shadow">
             <div class="h-40 bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-5xl relative">
@@ -98,12 +100,17 @@
 
                 <!-- Prerequisites -->
                 @if($hasPrereqs)
-                <div class="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div class="text-xs font-semibold text-amber-700 mb-1">⚠ Prerequisites Required</div>
+                <div class="mb-3 p-2.5 {{ $hasUnmetPrereqs ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200' }} rounded-lg">
+                    <div class="text-xs font-semibold {{ $hasUnmetPrereqs ? 'text-amber-700' : 'text-green-700' }} mb-1">
+                        {{ $hasUnmetPrereqs ? '⚠ Prerequisites Required' : '✅ Prerequisites Met' }}
+                    </div>
                     @foreach($prereqs as $prereq)
                     @php $prereqDone = in_array($prereq->id, $completedIds); @endphp
-                    <div class="flex items-center gap-1.5 text-xs {{ $prereqDone ? 'text-green-600' : 'text-amber-600' }}">
-                        {{ $prereqDone ? '✅' : '○' }} {{ $prereq->title }}
+                    <div class="flex items-center gap-1.5 text-xs {{ $prereqDone ? 'text-green-600' : 'text-red-600 font-medium' }}">
+                        {{ $prereqDone ? '✅' : '🔒' }} {{ $prereq->title }}
+                        @if(!$prereqDone)
+                        <span class="text-red-400">— complete this first</span>
+                        @endif
                     </div>
                     @endforeach
                 </div>
@@ -117,12 +124,21 @@
 
                 @if($isEnrolled)
                     <a href="{{ route('student.course.show', $course) }}" class="block text-center btn-primary w-full">Continue Learning →</a>
+                @elseif($hasUnmetPrereqs)
+                    <div class="w-full text-center">
+                        <button disabled
+                            class="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed opacity-70">
+                            🔒 Complete Prerequisites First
+                        </button>
+                        <p class="text-xs text-red-500 mt-1.5 font-medium">
+                            Required: {{ $unmetPrereqs->pluck('title')->implode(', ') }}
+                        </p>
+                    </div>
                 @else
                     <form action="{{ route('student.enroll', $course) }}" method="POST">
                         @csrf
-                        <button class="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition
-                            {{ $hasPrereqs ? 'opacity-90' : '' }}">
-                            {{ $hasPrereqs ? '🔒 Enroll (Prerequisites Apply)' : 'Enroll Free' }}
+                        <button class="w-full bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">
+                            Enroll Free
                         </button>
                     </form>
                 @endif

@@ -135,6 +135,14 @@ class StudentController extends Controller
         $request->validate(['watch_percent' => 'required|integer|min:0|max:100']);
         $user = Auth::user();
 
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $lesson->course_id)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json(['error' => 'Not enrolled in this course.'], 403);
+        }
+
         $progress = UserProgress::firstOrCreate(
             ['user_id' => $user->id, 'lesson_id' => $lesson->id],
             ['watch_percent' => 0]
@@ -153,6 +161,15 @@ class StudentController extends Controller
     public function markComplete(Course $course, Lesson $lesson)
     {
         $user = Auth::user();
+
+        if ($lesson->course_id !== $course->id) {
+            abort(403, 'Lesson does not belong to this course.');
+        }
+
+        $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
+        if (!$enrollment) {
+            return redirect()->route('student.courses')->with('error', 'You are not enrolled in this course.');
+        }
 
         $progress = UserProgress::where('user_id', $user->id)
             ->where('lesson_id', $lesson->id)
@@ -177,8 +194,6 @@ class StudentController extends Controller
             ->where('is_completed', true)
             ->count();
         $courseProgress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
-
-        $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
 
         if ($completedLessons === $totalLessons && $totalLessons > 0 && !$enrollment->completed_at) {
             $enrollment->update([

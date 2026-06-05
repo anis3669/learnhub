@@ -99,3 +99,20 @@ The app starts via `bash start.sh` which:
 - `alpinejs` — Reactive UI (dropdowns, timer, quiz navigation)
 - `tailwindcss` — Styling
 - `vite` — Asset bundling
+
+## Running Locally with XAMPP / MySQL
+To switch from PostgreSQL (Replit) to MySQL (XAMPP):
+1. In `.env`, set:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=learnhub
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+2. Create the `learnhub` database in phpMyAdmin (or via CLI: `CREATE DATABASE learnhub;`).
+3. Run `php artisan migrate --seed` to create tables and seed demo data.
+4. Start the server: `php artisan serve` (defaults to port 8000).
+
+Note: On Replit the database credentials are injected automatically via `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD` environment secrets — no manual `.env` edits needed there.
