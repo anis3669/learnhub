@@ -28,7 +28,7 @@ class SkillAssessmentController extends Controller
     {
         $request->validate([
             'answers'   => 'required|array|size:10',
-            'answers.*' => 'required|in:1,2,3,4',
+            'answers.*' => 'required|in:a,b,c,d',
         ]);
 
         $user        = Auth::user();

@@ -228,7 +228,7 @@
                                     dispatchProgress(pct);
                                 }
                             }
-                        }, 3000);
+                        }, 5000);
                     } else {
                         clearInterval(trackInterval);
                     }
