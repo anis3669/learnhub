@@ -72,14 +72,21 @@ class SkillAssessmentController extends Controller
         $level       = $lastAssessment->recommended_level;
         $enrolledIds = $user->enrollments()->pluck('course_id')->toArray();
 
+        $courseLevelMap = [
+            'Basic'        => 'Beginner',
+            'Intermediate' => 'Intermediate',
+            'Advanced'     => 'Advanced',
+        ];
+        $courseLevel = $courseLevelMap[$level] ?? $level;
+
         $recommended = Course::where('is_published', true)
-            ->where('level', $level)
+            ->where('level', $courseLevel)
             ->withCount('lessons', 'enrollments')
             ->with('teacher')
             ->get();
 
         $otherCourses = Course::where('is_published', true)
-            ->where('level', '!=', $level)
+            ->where('level', '!=', $courseLevel)
             ->withCount('lessons', 'enrollments')
             ->with('teacher')
             ->get();
