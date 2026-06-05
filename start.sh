@@ -1,6 +1,24 @@
 #!/bin/bash
 set -e
 
+# ─── DATABASE CONFIGURATION ─────────────────────────────────────────────────
+# Replit (default): PostgreSQL credentials are injected automatically via
+#   PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD environment secrets.
+#   The .env section below maps these to DB_* variables — no manual edits needed.
+#
+# XAMPP / MySQL (local development):
+#   1. Edit the DB_* block below (or override via .env after generation):
+#        DB_CONNECTION=mysql
+#        DB_HOST=127.0.0.1
+#        DB_PORT=3306
+#        DB_DATABASE=learnhub
+#        DB_USERNAME=root
+#        DB_PASSWORD=
+#   2. Create the database first: CREATE DATABASE learnhub;
+#   3. Run: php artisan migrate --seed
+#   4. Start: php artisan serve   (default port 8000)
+# ────────────────────────────────────────────────────────────────────────────
+
 # Generate .env file from environment variables
 cat > .env << EOF
 APP_NAME=${APP_NAME:-LearnHub}

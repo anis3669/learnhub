@@ -43,7 +43,7 @@ class SkillAssessmentController extends Controller
         }
 
         $level = match(true) {
-            $score <= 3  => 'Beginner',
+            $score <= 3  => 'Basic',
             $score <= 7  => 'Intermediate',
             default      => 'Advanced',
         };

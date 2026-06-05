@@ -40,7 +40,7 @@
             </div>
         </div>
         <div class="mt-6 grid grid-cols-3 gap-4 text-center">
-            @foreach(['Beginner' => ['0–3', 'bg-green-500'], 'Intermediate' => ['4–7', 'bg-yellow-400'], 'Advanced' => ['8–10', 'bg-red-500']] as $lvl => [$range, $color])
+            @foreach(['Basic' => ['0–3', 'bg-green-500'], 'Intermediate' => ['4–7', 'bg-yellow-400'], 'Advanced' => ['8–10', 'bg-red-500']] as $lvl => [$range, $color])
             <div class="rounded-xl p-3 {{ $lvl === $level ? 'bg-white/20 ring-2 ring-white' : 'bg-white/10' }}">
                 <div class="text-sm font-bold {{ $lvl === $level ? 'text-white' : 'text-indigo-200' }}">{{ $lvl }}</div>
                 <div class="text-xs text-indigo-300">{{ $range }} correct</div>
@@ -51,6 +51,8 @@
             @endforeach
         </div>
     </div>
+
+    @php $icons = ['Programming'=>'💻','Web Development'=>'🌐','Computer Science'=>'🔬','AI & ML'=>'🤖','General'=>'📚']; @endphp
 
     <!-- Recommended courses -->
     @if($recommended->isNotEmpty())
@@ -63,7 +65,6 @@
             @foreach($recommended as $course)
             <div class="card overflow-hidden hover:shadow-md transition-shadow ring-2 ring-indigo-200">
                 <div class="h-36 bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-5xl relative">
-                    @php $icons = ['Programming'=>'💻','Web Development'=>'🌐','Computer Science'=>'🔬','AI & ML'=>'🤖','General'=>'📚']; @endphp
                     {{ $icons[$course->category] ?? '📖' }}
                     <div class="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full font-bold">Recommended ✨</div>
                 </div>

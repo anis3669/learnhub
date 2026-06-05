@@ -13,7 +13,7 @@ return new class extends Migration
             $table->boolean('prerequisites_met')->default(false)->change();
         });
 
-        DB::statement("UPDATE enrollments SET prerequisites_met = false");
+        DB::statement("UPDATE enrollments SET prerequisites_met = true");
     }
 
     public function down(): void
