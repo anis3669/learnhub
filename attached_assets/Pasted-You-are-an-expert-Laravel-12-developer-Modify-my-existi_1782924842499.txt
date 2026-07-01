@@ -1,0 +1,73 @@
+You are an expert Laravel 12 developer.
+
+Modify my existing Laravel 12 LMS project without changing its current architecture. Preserve all existing functionality including authentication, roles, Filament admin panel, teacher panel, student panel, enrollments, lessons, quizzes, discussions, and progress tracking.
+
+Implement an adaptive learning path system.
+
+Requirements:
+
+1. Add a first-time onboarding flow for students after login.
+2. If the student has never completed the onboarding, show a modal asking:
+   "Are you familiar with programming?"
+   Options:
+   - Yes
+   - No
+
+3. If "Yes" is selected:
+   - Present a 10-question programming assessment.
+   - Calculate the score.
+   - If the score is between 80 and 100:
+     - Recommend Beginner and Intermediate learning paths.
+     - Lock all Advanced courses until at least one Intermediate course is completed.
+   - If the score is below 80:
+     - Recommend the Introduction to Coding course first.
+     - After completing Introduction, unlock Beginner.
+     - After Beginner, unlock Intermediate.
+     - After Intermediate, unlock Advanced.
+
+4. If "No" is selected:
+   - Skip the assessment.
+   - Automatically assign the Introduction to Coding learning path.
+
+5. Create database tables:
+   - student_skill_assessments
+   - student_learning_paths
+   - course_unlocks
+   - student_course_permissions
+
+6. Add a 'level' column to courses:
+   - Introduction
+   - Beginner
+   - Intermediate
+   - Advanced
+
+7. Build a learning path service that automatically recommends courses based on the student's assessment score and completed courses.
+
+8. Allow administrators to manually grant access to any course regardless of prerequisites. Admin overrides must always take precedence over automatic restrictions.
+
+9. Redesign the student dashboard to include:
+   - Continue Learning
+   - Recommended Course
+   - Learning Path Progress
+   - Course Completion Progress
+   - Recent Discussions
+   - Badges
+   - Daily Streak
+   - Upcoming Quizzes
+
+10. Enhance the teacher dashboard with:
+   - Student progress
+   - Course completion statistics
+   - Quiz analytics
+   - Recent discussions
+
+11. Enhance the admin dashboard with:
+   - Student analytics
+   - Teacher analytics
+   - Course analytics
+   - Enrollment reports
+   - Learning path statistics
+   - Assessment score distribution
+   - Course completion reports
+
+12. Use Laravel Service classes, Policies, Form Requests, Eloquent Relationships, Queues, and Events where appropriate. Follow Laravel 12 best practices, keep the project modular, avoid breaking existing functionality, and ensure all new features integrate cleanly with the current MySQL database running on XAMPP

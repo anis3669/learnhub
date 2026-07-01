@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Course;
-use App\Models\Lesson;
-use App\Models\Quiz;
-use App\Models\Question;
-use App\Models\QuestionOption;
 use App\Models\Badge;
-use App\Models\Enrollment;
+use App\Models\Course;
+use App\Models\CourseUnlock;
 use App\Models\DiscussionPost;
 use App\Models\DiscussionReply;
-use Spatie\Permission\Models\Role;
+use App\Models\Enrollment;
+use App\Models\Lesson;
+use App\Models\Question;
+use App\Models\QuestionOption;
+use App\Models\Quiz;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -34,26 +35,26 @@ class DatabaseSeeder extends Seeder
 
         $teacher1 = User::updateOrCreate(['email' => 'teacher@learnhub.com'], [
             'name' => 'Dr.Karan Thapa', 'password' => Hash::make('password'), 'points' => 500,
-            'bio' => 'Senior Computer Science Professor with 10 years of experience.',
+            'bio'  => 'Senior Computer Science Professor with 10 years of experience.',
         ]);
         $teacher1->syncRoles(['teacher']);
 
         $teacher2 = User::updateOrCreate(['email' => 'teacher2@learnhub.com'], [
             'name' => 'Prof.Muansu Regmi ', 'password' => Hash::make('password'), 'points' => 350,
-            'bio' => 'Web Development expert and full-stack developer.',
+            'bio'  => 'Web Development expert and full-stack developer.',
         ]);
         $teacher2->syncRoles(['teacher']);
 
         $studentData = [
-            ['name' => 'Alice Rai', 'email' => 'alice@learnhub.com', 'points' => 850],
-            ['name' => 'Bibek Yadav', 'email' => 'bibek@learnhub.com', 'points' => 720],
-            ['name' => 'Kushal Bhurtel', 'email' => 'kushal@learnhub.com', 'points' => 650],
-            ['name' => 'David Warner', 'email' => 'david@learnhub.com', 'points' => 580],
-            ['name' => 'Asif Sheikh', 'email' => 'asif@learnhub.com', 'points' => 920],
-            ['name' => 'Arif Sheikh', 'email' => 'arif@learnhub.com', 'points' => 430],
-            ['name' => 'Kim Jong', 'email' => 'kim@learnhub.com', 'points' => 770],
-            ['name' => 'Henry Klasein', 'email' => 'henry@learnhub.com', 'points' => 310],
-            ['name' => 'Student1', 'email' => 'student@learnhub.com', 'points' => 450],
+            ['name' => 'Alice Rai',      'email' => 'alice@learnhub.com',   'points' => 850],
+            ['name' => 'Bibek Yadav',    'email' => 'bibek@learnhub.com',   'points' => 720],
+            ['name' => 'Kushal Bhurtel', 'email' => 'kushal@learnhub.com',  'points' => 650],
+            ['name' => 'David Warner',   'email' => 'david@learnhub.com',   'points' => 580],
+            ['name' => 'Asif Sheikh',    'email' => 'asif@learnhub.com',    'points' => 920],
+            ['name' => 'Arif Sheikh',    'email' => 'arif@learnhub.com',    'points' => 430],
+            ['name' => 'Kim Jong',       'email' => 'kim@learnhub.com',     'points' => 770],
+            ['name' => 'Henry Klasein',  'email' => 'henry@learnhub.com',   'points' => 310],
+            ['name' => 'Student1',       'email' => 'student@learnhub.com', 'points' => 450],
         ];
         $students = [];
         foreach ($studentData as $sd) {
@@ -65,64 +66,99 @@ class DatabaseSeeder extends Seeder
         }
 
         $badgesData = [
-            ['name' => 'First Steps', 'description' => 'Completed your first lesson', 'icon' => '🌟', 'color' => 'yellow', 'criteria_type' => 'lessons_completed', 'criteria_value' => 1],
-            ['name' => 'Quiz Master', 'description' => 'Scored 100% on a quiz', 'icon' => '🏆', 'color' => 'yellow', 'criteria_type' => 'quiz_perfect', 'criteria_value' => 1],
-            ['name' => 'Fast Learner', 'description' => 'Completed 5 lessons', 'icon' => '⚡', 'color' => 'blue', 'criteria_type' => 'lessons_completed', 'criteria_value' => 5],
-            ['name' => 'Scholar', 'description' => 'Completed your first course', 'icon' => '🎓', 'color' => 'green', 'criteria_type' => 'courses_completed', 'criteria_value' => 1],
-            ['name' => 'Top Scorer', 'description' => 'Reached 500 points', 'icon' => '🥇', 'color' => 'orange', 'criteria_type' => 'points', 'criteria_value' => 500],
-            ['name' => 'Discussion Leader', 'description' => 'Posted 5 discussion topics', 'icon' => '💬', 'color' => 'purple', 'criteria_type' => 'discussions', 'criteria_value' => 5],
-            ['name' => 'Streak Master', 'description' => '7-day learning streak', 'icon' => '🔥', 'color' => 'red', 'criteria_type' => 'streak', 'criteria_value' => 7],
-            ['name' => 'Explorer', 'description' => 'Enrolled in 3 courses', 'icon' => '🚀', 'color' => 'indigo', 'criteria_type' => 'enrollments', 'criteria_value' => 3],
+            ['name' => 'First Steps',       'description' => 'Completed your first lesson',    'icon' => '🌟', 'color' => 'yellow', 'criteria_type' => 'lessons_completed', 'criteria_value' => 1],
+            ['name' => 'Quiz Master',        'description' => 'Scored 100% on a quiz',          'icon' => '🏆', 'color' => 'yellow', 'criteria_type' => 'quiz_perfect',       'criteria_value' => 1],
+            ['name' => 'Fast Learner',       'description' => 'Completed 5 lessons',            'icon' => '⚡', 'color' => 'blue',   'criteria_type' => 'lessons_completed', 'criteria_value' => 5],
+            ['name' => 'Scholar',            'description' => 'Completed your first course',    'icon' => '🎓', 'color' => 'green',  'criteria_type' => 'courses_completed', 'criteria_value' => 1],
+            ['name' => 'Top Scorer',         'description' => 'Reached 500 points',             'icon' => '🥇', 'color' => 'orange', 'criteria_type' => 'points',            'criteria_value' => 500],
+            ['name' => 'Discussion Leader',  'description' => 'Posted 5 discussion topics',     'icon' => '💬', 'color' => 'purple', 'criteria_type' => 'discussions',       'criteria_value' => 5],
+            ['name' => 'Streak Master',      'description' => '7-day learning streak',          'icon' => '🔥', 'color' => 'red',    'criteria_type' => 'streak',            'criteria_value' => 7],
+            ['name' => 'Explorer',           'description' => 'Enrolled in 3 courses',          'icon' => '🚀', 'color' => 'indigo', 'criteria_type' => 'enrollments',       'criteria_value' => 3],
         ];
         foreach ($badgesData as $b) {
             Badge::firstOrCreate(['name' => $b['name']], $b);
         }
 
+        // Introduction course (new)
+        $courseIntro = Course::firstOrCreate(['title' => 'Introduction to Coding'], [
+            'teacher_id'     => $teacher1->id,
+            'description'    => 'A complete beginner\'s guide to programming. Learn the fundamentals of coding with simple exercises — no prior experience needed. Perfect if you\'ve never coded before.',
+            'category'       => 'Programming',
+            'level'          => 'Introduction',
+            'is_published'   => true,
+            'duration_hours' => 8,
+        ]);
+
         $course1 = Course::firstOrCreate(['title' => 'Introduction to Python Programming'], [
-            'teacher_id' => $teacher1->id,
-            'description' => 'Learn Python from scratch. This comprehensive course covers variables, loops, functions, OOP, and real-world projects. Perfect for beginners wanting to start their coding journey.',
-            'category' => 'Programming', 'level' => 'Beginner', 'is_published' => true, 'duration_hours' => 12,
+            'teacher_id'     => $teacher1->id,
+            'description'    => 'Learn Python from scratch. This comprehensive course covers variables, loops, functions, OOP, and real-world projects. Perfect for beginners wanting to start their coding journey.',
+            'category'       => 'Programming', 'level' => 'Beginner', 'is_published' => true, 'duration_hours' => 12,
         ]);
         $course2 = Course::firstOrCreate(['title' => 'Web Development with Laravel'], [
-            'teacher_id' => $teacher2->id,
-            'description' => 'Master Laravel 12, the PHP framework for artisans. Build real-world web applications with authentication, databases, APIs and more.',
-            'category' => 'Web Development', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 20,
+            'teacher_id'     => $teacher2->id,
+            'description'    => 'Master Laravel 12, the PHP framework for artisans. Build real-world web applications with authentication, databases, APIs and more.',
+            'category'       => 'Web Development', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 20,
         ]);
         $course3 = Course::firstOrCreate(['title' => 'Data Structures & Algorithms'], [
-            'teacher_id' => $teacher1->id,
-            'description' => 'Master the fundamental concepts of Data Structures and Algorithms. Learn sorting, searching, trees, graphs, and dynamic programming.',
-            'category' => 'Computer Science', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 16,
+            'teacher_id'     => $teacher1->id,
+            'description'    => 'Master the fundamental concepts of Data Structures and Algorithms. Learn sorting, searching, trees, graphs, and dynamic programming.',
+            'category'       => 'Computer Science', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 16,
         ]);
         $course4 = Course::firstOrCreate(['title' => 'Machine Learning Fundamentals'], [
-            'teacher_id' => $teacher2->id,
-            'description' => 'An introduction to Machine Learning concepts including supervised learning, neural networks, and model evaluation.',
-            'category' => 'AI & ML', 'level' => 'Advanced', 'is_published' => true, 'duration_hours' => 18,
+            'teacher_id'     => $teacher2->id,
+            'description'    => 'An introduction to Machine Learning concepts including supervised learning, neural networks, and model evaluation.',
+            'category'       => 'AI & ML', 'level' => 'Advanced', 'is_published' => true, 'duration_hours' => 18,
         ]);
+
+        // Course unlock rules
+        $unlockRules = [
+            ['prerequisite_level' => 'Introduction', 'unlocks_level' => 'Beginner'],
+            ['prerequisite_level' => 'Beginner',     'unlocks_level' => 'Intermediate'],
+            ['prerequisite_level' => 'Intermediate',  'unlocks_level' => 'Advanced'],
+        ];
+        foreach ($unlockRules as $rule) {
+            CourseUnlock::firstOrCreate($rule);
+        }
+
+        // Lessons for Introduction course
+        $introLessons = [
+            ['title' => 'What is Programming?',         'video_url' => 'https://www.youtube.com/watch?v=zOjov-2OZ0E', 'duration_minutes' => 15, 'order' => 1, 'content' => 'Overview of programming, computers, and how software works.'],
+            ['title' => 'Your First Program',           'video_url' => 'https://www.youtube.com/watch?v=kqtD5dpn9C8', 'duration_minutes' => 20, 'order' => 2, 'content' => 'Writing Hello World in multiple languages.'],
+            ['title' => 'Variables and Data',           'video_url' => 'https://www.youtube.com/watch?v=cQT33yu9pY8', 'duration_minutes' => 20, 'order' => 3, 'content' => 'Understanding variables, types, and storing information.'],
+            ['title' => 'Making Decisions (If/Else)',   'video_url' => 'https://www.youtube.com/watch?v=PqFKRqpHrjw', 'duration_minutes' => 25, 'order' => 4, 'content' => 'Conditionals and control flow.'],
+            ['title' => 'Repeating Things (Loops)',     'video_url' => 'https://www.youtube.com/watch?v=9Os0o3wzS_I', 'duration_minutes' => 25, 'order' => 5, 'content' => 'For and while loops — making programs repeat tasks.'],
+        ];
+        foreach ($introLessons as $l) {
+            Lesson::firstOrCreate(
+                ['course_id' => $courseIntro->id, 'title' => $l['title']],
+                array_merge($l, ['course_id' => $courseIntro->id, 'is_published' => true])
+            );
+        }
 
         $lessonsByCourse = [
             $course1->id => [
-                ['title' => 'Getting Started with Python', 'video_url' => 'https://www.youtube.com/watch?v=kqtD5dpn9C8', 'duration_minutes' => 15, 'order' => 1, 'content' => 'Installation, environment setup, and Hello World.'],
-                ['title' => 'Variables & Data Types', 'video_url' => 'https://www.youtube.com/watch?v=cQT33yu9pY8', 'duration_minutes' => 20, 'order' => 2, 'content' => 'Integers, floats, strings, booleans and type casting.'],
-                ['title' => 'Control Flow: If/Else & Loops', 'video_url' => 'https://www.youtube.com/watch?v=PqFKRqpHrjw', 'duration_minutes' => 25, 'order' => 3, 'content' => 'Conditionals and iteration with for and while loops.'],
-                ['title' => 'Functions & Modules', 'video_url' => 'https://www.youtube.com/watch?v=9Os0o3wzS_I', 'duration_minutes' => 30, 'order' => 4, 'content' => 'Defining functions, parameters, return values, and imports.'],
-                ['title' => 'Object-Oriented Programming', 'video_url' => 'https://www.youtube.com/watch?v=JeznW_7DlB0', 'duration_minutes' => 40, 'order' => 5, 'content' => 'Classes, objects, inheritance, and polymorphism.'],
+                ['title' => 'Getting Started with Python',    'video_url' => 'https://www.youtube.com/watch?v=kqtD5dpn9C8', 'duration_minutes' => 15, 'order' => 1, 'content' => 'Installation, environment setup, and Hello World.'],
+                ['title' => 'Variables & Data Types',         'video_url' => 'https://www.youtube.com/watch?v=cQT33yu9pY8', 'duration_minutes' => 20, 'order' => 2, 'content' => 'Integers, floats, strings, booleans and type casting.'],
+                ['title' => 'Control Flow: If/Else & Loops',  'video_url' => 'https://www.youtube.com/watch?v=PqFKRqpHrjw', 'duration_minutes' => 25, 'order' => 3, 'content' => 'Conditionals and iteration with for and while loops.'],
+                ['title' => 'Functions & Modules',            'video_url' => 'https://www.youtube.com/watch?v=9Os0o3wzS_I', 'duration_minutes' => 30, 'order' => 4, 'content' => 'Defining functions, parameters, return values, and imports.'],
+                ['title' => 'Object-Oriented Programming',   'video_url' => 'https://www.youtube.com/watch?v=JeznW_7DlB0', 'duration_minutes' => 40, 'order' => 5, 'content' => 'Classes, objects, inheritance, and polymorphism.'],
             ],
             $course2->id => [
-                ['title' => 'Laravel Installation & Setup', 'video_url' => 'https://www.youtube.com/watch?v=MFh0Fd7BsjE', 'duration_minutes' => 20, 'order' => 1, 'content' => 'Installing Laravel 12 and understanding project structure.'],
-                ['title' => 'Routing & Controllers', 'video_url' => 'https://www.youtube.com/watch?v=ImtZ5yENzgE', 'duration_minutes' => 25, 'order' => 2, 'content' => 'Creating routes, controllers, and MVC pattern.'],
-                ['title' => 'Blade Templates & Views', 'video_url' => 'https://www.youtube.com/watch?v=6ePuFNnCmgI', 'duration_minutes' => 20, 'order' => 3, 'content' => 'Blade templating engine, layouts, and components.'],
-                ['title' => 'Eloquent ORM & Migrations', 'video_url' => 'https://www.youtube.com/watch?v=e3Zl1lYNR7g', 'duration_minutes' => 35, 'order' => 4, 'content' => 'Database migrations, Eloquent models, and relationships.'],
+                ['title' => 'Laravel Installation & Setup',  'video_url' => 'https://www.youtube.com/watch?v=MFh0Fd7BsjE', 'duration_minutes' => 20, 'order' => 1, 'content' => 'Installing Laravel 12 and understanding project structure.'],
+                ['title' => 'Routing & Controllers',         'video_url' => 'https://www.youtube.com/watch?v=ImtZ5yENzgE', 'duration_minutes' => 25, 'order' => 2, 'content' => 'Creating routes, controllers, and MVC pattern.'],
+                ['title' => 'Blade Templates & Views',       'video_url' => 'https://www.youtube.com/watch?v=6ePuFNnCmgI', 'duration_minutes' => 20, 'order' => 3, 'content' => 'Blade templating engine, layouts, and components.'],
+                ['title' => 'Eloquent ORM & Migrations',     'video_url' => 'https://www.youtube.com/watch?v=e3Zl1lYNR7g', 'duration_minutes' => 35, 'order' => 4, 'content' => 'Database migrations, Eloquent models, and relationships.'],
             ],
             $course3->id => [
-                ['title' => 'Introduction to Algorithms', 'video_url' => 'https://www.youtube.com/watch?v=0IAPZzGSbME', 'duration_minutes' => 25, 'order' => 1, 'content' => 'Big O notation, time & space complexity.'],
-                ['title' => 'Arrays & Linked Lists', 'video_url' => 'https://www.youtube.com/watch?v=zg9ih6SVACc', 'duration_minutes' => 30, 'order' => 2, 'content' => 'Array operations, singly and doubly linked lists.'],
-                ['title' => 'Sorting Algorithms', 'video_url' => 'https://www.youtube.com/watch?v=kPRA0W1kECg', 'duration_minutes' => 40, 'order' => 3, 'content' => 'Bubble sort, merge sort, quicksort, and time complexities.'],
-                ['title' => 'Trees & Binary Search Trees', 'video_url' => 'https://www.youtube.com/watch?v=oSWTXtMglKE', 'duration_minutes' => 45, 'order' => 4, 'content' => 'Tree traversal, BST operations, and AVL trees.'],
+                ['title' => 'Introduction to Algorithms',    'video_url' => 'https://www.youtube.com/watch?v=0IAPZzGSbME', 'duration_minutes' => 25, 'order' => 1, 'content' => 'Big O notation, time & space complexity.'],
+                ['title' => 'Arrays & Linked Lists',         'video_url' => 'https://www.youtube.com/watch?v=zg9ih6SVACc', 'duration_minutes' => 30, 'order' => 2, 'content' => 'Array operations, singly and doubly linked lists.'],
+                ['title' => 'Sorting Algorithms',            'video_url' => 'https://www.youtube.com/watch?v=kPRA0W1kECg', 'duration_minutes' => 40, 'order' => 3, 'content' => 'Bubble sort, merge sort, quicksort, and time complexities.'],
+                ['title' => 'Trees & Binary Search Trees',   'video_url' => 'https://www.youtube.com/watch?v=oSWTXtMglKE', 'duration_minutes' => 45, 'order' => 4, 'content' => 'Tree traversal, BST operations, and AVL trees.'],
             ],
             $course4->id => [
-                ['title' => 'What is Machine Learning?', 'video_url' => 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'duration_minutes' => 20, 'order' => 1, 'content' => 'ML overview, supervised vs unsupervised learning.'],
-                ['title' => 'Linear Regression', 'video_url' => 'https://www.youtube.com/watch?v=zPG4NjIkCjc', 'duration_minutes' => 30, 'order' => 2, 'content' => 'Understanding linear regression and cost functions.'],
-                ['title' => 'Neural Networks Basics', 'video_url' => 'https://www.youtube.com/watch?v=aircAruvnKk', 'duration_minutes' => 45, 'order' => 3, 'content' => 'Neurons, layers, activation functions, and backpropagation.'],
+                ['title' => 'What is Machine Learning?',     'video_url' => 'https://www.youtube.com/watch?v=ukzFI9rgwfU', 'duration_minutes' => 20, 'order' => 1, 'content' => 'ML overview, supervised vs unsupervised learning.'],
+                ['title' => 'Linear Regression',             'video_url' => 'https://www.youtube.com/watch?v=zPG4NjIkCjc', 'duration_minutes' => 30, 'order' => 2, 'content' => 'Understanding linear regression and cost functions.'],
+                ['title' => 'Neural Networks Basics',        'video_url' => 'https://www.youtube.com/watch?v=aircAruvnKk', 'duration_minutes' => 45, 'order' => 3, 'content' => 'Neurons, layers, activation functions, and backpropagation.'],
             ],
         ];
 
@@ -167,10 +203,10 @@ class DatabaseSeeder extends Seeder
                 'time_limit_minutes' => 20, 'passing_score' => 60, 'is_published' => true,
             ]);
             $sortingQs = [
-                ['q' => 'What is the average time complexity of QuickSort?', 'correct' => 'O(n log n)', 'wrong' => ['O(n²)', 'O(n)', 'O(log n)']],
-                ['q' => 'Which sorting algorithm is best for nearly sorted arrays?', 'correct' => 'Insertion Sort', 'wrong' => ['Bubble Sort', 'Quick Sort', 'Selection Sort']],
-                ['q' => 'What is the worst-case time complexity of Merge Sort?', 'correct' => 'O(n log n)', 'wrong' => ['O(n²)', 'O(n)', 'O(2^n)']],
-                ['q' => 'Which algorithm uses divide and conquer?', 'correct' => 'Merge Sort', 'wrong' => ['Bubble Sort', 'Insertion Sort', 'Selection Sort']],
+                ['q' => 'What is the average time complexity of QuickSort?',           'correct' => 'O(n log n)', 'wrong' => ['O(n²)', 'O(n)', 'O(log n)']],
+                ['q' => 'Which sorting algorithm is best for nearly sorted arrays?',   'correct' => 'Insertion Sort', 'wrong' => ['Bubble Sort', 'Quick Sort', 'Selection Sort']],
+                ['q' => 'What is the worst-case time complexity of Merge Sort?',       'correct' => 'O(n log n)', 'wrong' => ['O(n²)', 'O(n)', 'O(2^n)']],
+                ['q' => 'Which algorithm uses divide and conquer?',                    'correct' => 'Merge Sort', 'wrong' => ['Bubble Sort', 'Insertion Sort', 'Selection Sort']],
             ];
             foreach ($sortingQs as $i => $qd) {
                 $q = Question::create(['quiz_id' => $quiz2->id, 'question_text' => $qd['q'], 'type' => 'multiple_choice', 'points' => 10, 'order' => $i + 1]);
@@ -194,9 +230,9 @@ class DatabaseSeeder extends Seeder
         }
 
         $discussionTopics = [
-            ['title' => 'How to handle exceptions in Python?', 'body' => 'I am struggling with try/except blocks. Can someone explain the best practices for error handling in Python?'],
-            ['title' => 'Best resources for learning Django after this course?', 'body' => 'I finished the Python basics section and want to build web apps. Any recommendations for Django or Flask?'],
-            ['title' => 'Difference between list and tuple?', 'body' => 'I understand lists are mutable and tuples are immutable, but when should I use each one in real code?'],
+            ['title' => 'How to handle exceptions in Python?',             'body' => 'I am struggling with try/except blocks. Can someone explain the best practices for error handling in Python?'],
+            ['title' => 'Best resources for learning Django after this?',  'body' => 'I finished the Python basics section and want to build web apps. Any recommendations for Django or Flask?'],
+            ['title' => 'Difference between list and tuple?',              'body' => 'I understand lists are mutable and tuples are immutable, but when should I use each one in real code?'],
         ];
         foreach ($discussionTopics as $i => $dd) {
             if (!DiscussionPost::where('title', $dd['title'])->exists()) {
@@ -206,7 +242,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $firstBadge = Badge::where('name', 'First Steps')->first();
-        $topBadge = Badge::where('name', 'Top Scorer')->first();
+        $topBadge   = Badge::where('name', 'Top Scorer')->first();
         foreach ($students as $s) {
             if ($firstBadge) DB::table('user_badges')->updateOrInsert(['user_id' => $s->id, 'badge_id' => $firstBadge->id], ['earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
             if ($topBadge && $s->points >= 500) DB::table('user_badges')->updateOrInsert(['user_id' => $s->id, 'badge_id' => $topBadge->id], ['earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);

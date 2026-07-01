@@ -74,4 +74,19 @@ class User extends Authenticatable
     {
         return $this->quizAttempts()->max('score') ?? 0;
     }
+
+    public function skillAssessment()
+    {
+        return $this->hasOne(StudentSkillAssessment::class);
+    }
+
+    public function learningPath()
+    {
+        return $this->hasOne(StudentLearningPath::class);
+    }
+
+    public function coursePermissions()
+    {
+        return $this->hasMany(StudentCoursePermission::class);
+    }
 }

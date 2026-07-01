@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
@@ -20,7 +21,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function() {
+    Route::get('/dashboard', function () {
         /** @var User $user */
         $user = Auth::user();
         if ($user->hasRole('admin')) return redirect()->route('admin.dashboard');
@@ -49,6 +50,11 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::post('/discussion/{post}/reply', [StudentController::class, 'replyDiscussion'])->name('discussion.reply');
     Route::get('/leaderboard', [StudentController::class, 'leaderboard'])->name('leaderboard');
     Route::get('/badges', [StudentController::class, 'badges'])->name('badges');
+
+    // Onboarding
+    Route::post('/onboarding/familiar', [OnboardingController::class, 'familiar'])->name('onboarding.familiar');
+    Route::get('/onboarding/assessment', [OnboardingController::class, 'assessment'])->name('assessment');
+    Route::post('/onboarding/assessment', [OnboardingController::class, 'submitAssessment'])->name('assessment.submit');
 });
 
 // Teacher Routes
@@ -90,6 +96,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/badges', [AdminController::class, 'badges'])->name('badges');
     Route::post('/badges', [AdminController::class, 'storeBadge'])->name('badge.store');
     Route::delete('/badges/{badge}', [AdminController::class, 'deleteBadge'])->name('badge.delete');
+    Route::get('/course-permissions', [AdminController::class, 'coursePermissions'])->name('course-permissions');
+    Route::post('/course-permissions', [AdminController::class, 'grantCoursePermission'])->name('course-permissions.grant');
+    Route::delete('/course-permissions/{permission}', [AdminController::class, 'revokeCoursePermission'])->name('course-permissions.revoke');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

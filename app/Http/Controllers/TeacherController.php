@@ -3,31 +3,77 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
-use App\Models\Lesson;
-use App\Models\Quiz;
-use App\Models\Question;
-use App\Models\QuestionOption;
-use App\Models\Enrollment;
-use App\Models\QuizAttempt;
-use App\Models\UserProgress;
 use App\Models\DiscussionPost;
 use App\Models\DiscussionReply;
+use App\Models\Enrollment;
+use App\Models\Lesson;
+use App\Models\Question;
+use App\Models\QuestionOption;
+use App\Models\Quiz;
+use App\Models\QuizAttempt;
+use App\Models\UserProgress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
     public function dashboard()
     {
         $teacher = Auth::user();
-        $courses = Course::where('teacher_id', $teacher->id)->withCount('enrollments', 'lessons')->get();
-        $totalStudents = Enrollment::whereIn('course_id', $courses->pluck('id'))->distinct('user_id')->count();
-        $totalAttempts = QuizAttempt::whereIn('quiz_id',
-            Quiz::whereIn('course_id', $courses->pluck('id'))->pluck('id')
-        )->whereNotNull('completed_at')->count();
+        $courses = Course::where('teacher_id', $teacher->id)->withCount('enrollments', 'lessons', 'quizzes')->get();
+        $courseIds = $courses->pluck('id');
+
+        $totalStudents  = Enrollment::whereIn('course_id', $courseIds)->distinct('user_id')->count();
+        $totalAttempts  = QuizAttempt::whereIn('quiz_id', Quiz::whereIn('course_id', $courseIds)->pluck('id'))
+            ->whereNotNull('completed_at')->count();
+
         $recentEnrollments = Enrollment::with('user', 'course')
-            ->whereIn('course_id', $courses->pluck('id'))->latest()->take(5)->get();
-        return view('teacher.dashboard', compact('teacher', 'courses', 'totalStudents', 'totalAttempts', 'recentEnrollments'));
+            ->whereIn('course_id', $courseIds)->latest()->take(5)->get();
+
+        $courseStats = $courses->map(function ($course) {
+            $total     = $course->enrollments_count;
+            $completed = Enrollment::where('course_id', $course->id)->where('progress_percent', '>=', 100)->count();
+            $quizIds   = $course->quizzes()->pluck('id');
+            $attempts  = QuizAttempt::whereIn('quiz_id', $quizIds)->whereNotNull('completed_at');
+            $passRate  = $attempts->count() > 0
+                ? round($attempts->where('passed', true)->count() / $attempts->count() * 100)
+                : null;
+            $avgScore  = $attempts->count() > 0
+                ? round($attempts->avg(DB::raw('CASE WHEN total_points > 0 THEN score * 100.0 / total_points ELSE 0 END')))
+                : null;
+            return [
+                'course'    => $course,
+                'total'     => $total,
+                'completed' => $completed,
+                'rate'      => $total > 0 ? round($completed / $total * 100) : 0,
+                'passRate'  => $passRate,
+                'avgScore'  => $avgScore,
+            ];
+        });
+
+        $recentDiscussions = DiscussionPost::with('user', 'course', 'replies')
+            ->whereIn('course_id', $courseIds)->latest()->take(6)->get();
+
+        $quizAnalytics = Quiz::whereIn('course_id', $courseIds)->withCount('attempts')->get()->map(function ($quiz) {
+            $attempts = QuizAttempt::where('quiz_id', $quiz->id)->whereNotNull('completed_at');
+            $total    = $attempts->count();
+            $passed   = (clone $attempts)->where('passed', true)->count();
+            return [
+                'quiz'     => $quiz,
+                'total'    => $total,
+                'passed'   => $passed,
+                'passRate' => $total > 0 ? round($passed / $total * 100) : 0,
+                'avgScore' => $total > 0
+                    ? round($attempts->avg(DB::raw('CASE WHEN total_points > 0 THEN score * 100.0 / total_points ELSE 0 END')))
+                    : 0,
+            ];
+        });
+
+        return view('teacher.dashboard', compact(
+            'teacher', 'courses', 'totalStudents', 'totalAttempts',
+            'recentEnrollments', 'courseStats', 'recentDiscussions', 'quizAnalytics'
+        ));
     }
 
     public function courses()
@@ -44,19 +90,19 @@ class TeacherController extends Controller
     public function storeCourse(Request $request)
     {
         $request->validate([
-            'title' => 'required|max:255',
+            'title'       => 'required|max:255',
             'description' => 'required',
-            'category' => 'required',
-            'level' => 'required',
+            'category'    => 'required',
+            'level'       => 'required',
         ]);
         $course = Course::create([
-            'teacher_id' => Auth::id(),
-            'title' => $request->title,
-            'description' => $request->description,
-            'category' => $request->category,
-            'level' => $request->level,
+            'teacher_id'     => Auth::id(),
+            'title'          => $request->title,
+            'description'    => $request->description,
+            'category'       => $request->category,
+            'level'          => $request->level,
             'duration_hours' => $request->duration_hours ?? 0,
-            'is_published' => $request->has('is_published'),
+            'is_published'   => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.course.show', $course)->with('success', 'Course created successfully!');
     }
@@ -64,8 +110,8 @@ class TeacherController extends Controller
     public function showCourse(Course $course)
     {
         if ($course->teacher_id !== Auth::id()) abort(403);
-        $lessons = $course->lessons()->withCount('progress')->get();
-        $quizzes = $course->quizzes()->withCount('attempts')->get();
+        $lessons  = $course->lessons()->withCount('progress')->get();
+        $quizzes  = $course->quizzes()->withCount('attempts')->get();
         $students = Enrollment::with('user')->where('course_id', $course->id)->latest()->get();
         return view('teacher.course-show', compact('course', 'lessons', 'quizzes', 'students'));
     }
@@ -81,12 +127,12 @@ class TeacherController extends Controller
         if ($course->teacher_id !== Auth::id()) abort(403);
         $request->validate(['title' => 'required|max:255', 'description' => 'required', 'category' => 'required', 'level' => 'required']);
         $course->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'category' => $request->category,
-            'level' => $request->level,
+            'title'          => $request->title,
+            'description'    => $request->description,
+            'category'       => $request->category,
+            'level'          => $request->level,
             'duration_hours' => $request->duration_hours ?? 0,
-            'is_published' => $request->has('is_published'),
+            'is_published'   => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.course.show', $course)->with('success', 'Course updated!');
     }
@@ -104,14 +150,14 @@ class TeacherController extends Controller
         $request->validate(['title' => 'required|max:255', 'video_url' => 'nullable|url']);
         $maxOrder = $course->lessons()->max('order') ?? 0;
         Lesson::create([
-            'course_id' => $course->id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'video_url' => $request->video_url,
-            'content' => $request->content,
+            'course_id'        => $course->id,
+            'title'            => $request->title,
+            'description'      => $request->description,
+            'video_url'        => $request->video_url,
+            'content'          => $request->content,
             'duration_minutes' => $request->duration_minutes ?? 0,
-            'order' => $maxOrder + 1,
-            'is_published' => $request->has('is_published'),
+            'order'            => $maxOrder + 1,
+            'is_published'     => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.course.show', $course)->with('success', 'Lesson added!');
     }
@@ -127,12 +173,12 @@ class TeacherController extends Controller
         if ($course->teacher_id !== Auth::id()) abort(403);
         $request->validate(['title' => 'required|max:255', 'video_url' => 'nullable|url']);
         $lesson->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'video_url' => $request->video_url,
-            'content' => $request->content,
+            'title'            => $request->title,
+            'description'      => $request->description,
+            'video_url'        => $request->video_url,
+            'content'          => $request->content,
             'duration_minutes' => $request->duration_minutes ?? 0,
-            'is_published' => $request->has('is_published'),
+            'is_published'     => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.course.show', $course)->with('success', 'Lesson updated!');
     }
@@ -149,13 +195,13 @@ class TeacherController extends Controller
         if ($course->teacher_id !== Auth::id()) abort(403);
         $request->validate(['title' => 'required|max:255', 'time_limit_minutes' => 'required|integer|min:1', 'passing_score' => 'required|integer|min:1|max:100']);
         $quiz = Quiz::create([
-            'course_id' => $course->id,
-            'lesson_id' => $request->lesson_id ?: null,
-            'title' => $request->title,
-            'description' => $request->description,
+            'course_id'          => $course->id,
+            'lesson_id'          => $request->lesson_id ?: null,
+            'title'              => $request->title,
+            'description'        => $request->description,
             'time_limit_minutes' => $request->time_limit_minutes,
-            'passing_score' => $request->passing_score,
-            'is_published' => $request->has('is_published'),
+            'passing_score'      => $request->passing_score,
+            'is_published'       => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.quiz.edit', [$course, $quiz])->with('success', 'Quiz created! Now add questions.');
     }
@@ -192,9 +238,9 @@ class TeacherController extends Controller
     {
         if ($course->teacher_id !== Auth::id()) abort(403);
         $enrollments = Enrollment::with('user')->where('course_id', $course->id)->get();
-        $quizzes = $course->quizzes()->with('attempts.user')->get();
-        $lessons = $course->lessons;
-        $progressData = $enrollments->map(function($enrollment) use ($lessons, $quizzes) {
+        $quizzes     = $course->quizzes()->with('attempts.user')->get();
+        $lessons     = $course->lessons;
+        $progressData = $enrollments->map(function ($enrollment) use ($lessons, $quizzes) {
             $completedLessons = UserProgress::where('user_id', $enrollment->user_id)
                 ->whereIn('lesson_id', $lessons->pluck('id'))->where('is_completed', true)->count();
             $quizAttempts = QuizAttempt::where('user_id', $enrollment->user_id)
@@ -206,9 +252,9 @@ class TeacherController extends Controller
 
     public function discussions()
     {
-        $teacher = Auth::user();
+        $teacher   = Auth::user();
         $courseIds = Course::where('teacher_id', $teacher->id)->pluck('id');
-        $posts = DiscussionPost::with('user', 'course', 'replies')->whereIn('course_id', $courseIds)->latest()->paginate(15);
+        $posts     = DiscussionPost::with('user', 'course', 'replies')->whereIn('course_id', $courseIds)->latest()->paginate(15);
         return view('teacher.discussions', compact('posts'));
     }
 
