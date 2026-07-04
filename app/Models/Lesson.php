@@ -33,6 +33,11 @@ class Lesson extends Model
         return $this->hasMany(UserProgress::class);
     }
 
+    public function videoProgress()
+    {
+        return $this->hasMany(LessonVideoProgress::class);
+    }
+
     public function getEmbedUrlAttribute()
     {
         $url = $this->video_url;

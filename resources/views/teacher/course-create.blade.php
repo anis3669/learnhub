@@ -36,9 +36,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Level *</label>
                     <select name="level" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach(['Beginner', 'Intermediate', 'Advanced'] as $l)
-                        <option value="{{ $l }}" {{ old('level') == $l ? 'selected' : '' }}>{{ $l }}</option>
-                        @endforeach
+                        @foreach(['Introduction', 'Beginner', 'Intermediate', 'Advanced'] as $l)
+    <option value="{{ $l }}" {{ old('level') == $l ? 'selected' : '' }}>{{ $l }}</option>
+@endforeach
                     </select>
                 </div>
             </div>

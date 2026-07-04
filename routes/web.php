@@ -42,6 +42,8 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/courses/{course}', [StudentController::class, 'showCourse'])->name('course.show');
     Route::get('/courses/{course}/lessons/{lesson}', [StudentController::class, 'watchLesson'])->name('lesson');
     Route::post('/courses/{course}/lessons/{lesson}/complete', [StudentController::class, 'markComplete'])->name('lesson.complete');
+    Route::post('/courses/{course}/lessons/{lesson}/progress', [StudentController::class, 'saveVideoProgress'])->name('lesson.progress');
+    Route::get('/courses/{course}/lessons/{lesson}/progress', [StudentController::class, 'getVideoProgress'])->name('lesson.progress.get');
     Route::get('/courses/{course}/quiz/{quiz}', [StudentController::class, 'takeQuiz'])->name('quiz');
     Route::post('/courses/{course}/quiz/{quiz}/submit', [StudentController::class, 'submitQuiz'])->name('quiz.submit');
     Route::get('/courses/{course}/quiz/{quiz}/result/{attempt}', [StudentController::class, 'quizResult'])->name('quiz.result');

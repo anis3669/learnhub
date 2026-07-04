@@ -27,27 +27,21 @@
 <div class="space-y-6">
     <!-- Video Player -->
     <div class="card overflow-hidden">
-        @if($lesson->video_url)
-        <div class="relative w-full" style="padding-top: 56.25%;">
-            <iframe
-                src="{{ $lesson->embed_url }}"
-                class="absolute inset-0 w-full h-full"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-            </iframe>
-        </div>
-        @else
-        <div class="h-64 bg-gray-900 flex items-center justify-center text-white">
-            <div class="text-center">
-                <div class="text-5xl mb-3">📹</div>
-                <p class="text-gray-300">No video for this lesson yet</p>
+        <div id="player-mount" class="relative w-full bg-black" style="padding-top: 56.25%;">
+            @if($lesson->video_url)
+            <div id="youtube-player" class="absolute inset-0 w-full h-full"></div>
+            @else
+            <div class="absolute inset-0 flex items-center justify-center text-white">
+                <div class="text-center">
+                    <div class="text-5xl mb-3">📹</div>
+                    <p class="text-gray-300">No video for this lesson yet</p>
+                </div>
             </div>
+            @endif
         </div>
-        @endif
 
         <div class="p-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex flex-col gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">{{ $lesson->title }}</h2>
                     @if($lesson->description)
@@ -55,18 +49,46 @@
                     @endif
                     <div class="text-xs text-gray-400 mt-1">⏱ {{ $lesson->duration_minutes }} minutes</div>
                 </div>
-                @if(!$userProgress->is_completed)
-                <form action="{{ route('student.lesson.complete', [$course, $lesson]) }}" method="POST">
-                    @csrf
-                    <button class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-green-700 transition flex items-center gap-2">
-                        ✅ Mark as Complete (+20 pts)
-                    </button>
-                </form>
-                @else
-                <div class="bg-green-100 text-green-700 px-6 py-2.5 rounded-xl font-medium flex items-center gap-2">
-                    ✅ Lesson Completed!
+
+                @if($lesson->video_url)
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Watch Progress</span>
+                        <span id="watch-percentage" class="font-semibold text-gray-900">{{ $videoProgress->watch_percentage ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="watch-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-500" style="width: {{ $videoProgress->watch_percentage ?? 0 }}%"></div>
+                    </div>
+                    <p id="watch-message" class="text-xs text-gray-500">Remaining {{ 100 - ($videoProgress->watch_percentage ?? 0) }}% to unlock completion</p>
                 </div>
                 @endif
+
+                <div>
+                    @php
+                        $isCompleted = $userProgress->is_completed;
+                        $isUnlocked = ($videoProgress->watch_percentage ?? 0) >= 80;
+                    @endphp
+
+                    @if($isCompleted)
+                    <div class="bg-green-100 text-green-700 px-6 py-2.5 rounded-xl font-medium flex items-center gap-2">
+                        ✅ Lesson Completed!
+                    </div>
+                    @elseif($isUnlocked)
+                    <form action="{{ route('student.lesson.complete', [$course, $lesson]) }}" method="POST">
+                        @csrf
+                        <button id="complete-btn" class="bg-green-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-green-700 transition flex items-center gap-2">
+                            ✅ Mark as Complete (+20 pts)
+                        </button>
+                    </form>
+                    <div id="success-message" class="mt-3 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm font-medium">
+                        🎉 Congratulations! You have watched enough of this lesson.
+                    </div>
+                    @else
+                    <button id="complete-btn" disabled class="bg-gray-300 text-gray-500 px-6 py-2.5 rounded-xl font-medium cursor-not-allowed flex items-center gap-2">
+                        🔒 Mark as Complete (Watch 80%)
+                    </button>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -114,4 +136,153 @@
         @endif
     </div>
 </div>
-@endsection
+
+@push('scripts')
+@if($lesson->video_url)
+<script>
+(function() {
+    const videoUrl = @json($lesson->video_url);
+    const lessonId = @json($lesson->id);
+    const courseId = @json($course->id);
+    const videoProgress = @json($videoProgress);
+
+    let player;
+    let playerReady = false;
+    let saveTimer = null;
+    let currentWatchPercentage = videoProgress ? videoProgress.watch_percentage : 0;
+    let currentWatchedSeconds = videoProgress ? videoProgress.watched_seconds : 0;
+
+    const SAVE_INTERVAL = 5000;
+    const UNLOCK_PERCENTAGE = 80;
+
+    function extractYouTubeId(url) {
+        url = url || '';
+        if (url.includes('youtube.com/watch?v=')) {
+            const id = url.split('v=')[1];
+            return id ? id.split('&')[0] : null;
+        }
+        if (url.includes('youtu.be/')) {
+            return url.split('youtu.be/')[1];
+        }
+        return null;
+    }
+
+    const ytId = extractYouTubeId(videoUrl);
+
+    if (ytId) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        window.onYouTubeIframeAPIReady = function() {
+            player = new YT.Player('youtube-player', {
+                height: '100%',
+                width: '100%',
+                videoId: ytId,
+                playerVars: {
+                    'playsinline': 1,
+                    'rel': 0,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        };
+    }
+
+    function onPlayerReady(event) {
+        playerReady = true;
+        if (currentWatchedSeconds > 0) {
+            event.target.seekTo(currentWatchedSeconds, true);
+        }
+        startTracking();
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.PLAYING) {
+            startTracking();
+        } else {
+            stopTracking();
+        }
+    }
+
+    function startTracking() {
+        stopTracking();
+        saveTimer = setInterval(trackAndSave, SAVE_INTERVAL);
+    }
+
+    function stopTracking() {
+        if (saveTimer) {
+            clearInterval(saveTimer);
+            saveTimer = null;
+        }
+    }
+
+    function trackAndSave() {
+        if (!playerReady || !player || typeof player.getCurrentTime !== 'function') return;
+
+        const currentTime = Math.floor(player.getCurrentTime());
+        const duration = Math.floor(player.getDuration());
+
+        if (duration <= 0) return;
+
+        const watched = Math.max(currentWatchedSeconds, currentTime);
+        const percentage = Math.min(100, Math.floor((watched / duration) * 100));
+
+        if (watched === currentWatchedSeconds && percentage === currentWatchPercentage) return;
+
+        currentWatchedSeconds = watched;
+        currentWatchPercentage = percentage;
+
+        updateUI(percentage, watched, duration);
+
+        saveProgressToServer(duration, watched, percentage);
+    }
+
+    async function saveProgressToServer(duration, watched, percentage) {
+        try {
+            const formData = new FormData();
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('watched_seconds', watched);
+            formData.append('duration_seconds', duration);
+            formData.append('watch_percentage', percentage);
+
+            await axios.post(`/student/courses/${courseId}/lessons/${lessonId}/progress`, formData);
+        } catch (error) {
+            console.error('Failed to save progress:', error);
+        }
+    }
+
+    function updateUI(percentage, watched, duration) {
+        const percentageEl = document.getElementById('watch-percentage');
+        const barEl = document.getElementById('watch-bar');
+        const messageEl = document.getElementById('watch-message');
+        const btnEl = document.getElementById('complete-btn');
+        const successEl = document.getElementById('success-message');
+
+        if (percentageEl) percentageEl.textContent = percentage + '%';
+        if (barEl) barEl.style.width = percentage + '%';
+
+        if (messageEl) {
+            const remaining = 100 - percentage;
+            messageEl.textContent = remaining > 0 ? `Remaining ${remaining}% to unlock completion` : 'You have unlocked completion!';
+        }
+
+        if (percentage >= UNLOCK_PERCENTAGE) {
+            if (successEl) successEl.classList.remove('hidden');
+            if (btnEl && btnEl.disabled) {
+                btnEl.disabled = false;
+                btnEl.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btnEl.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700', 'transition');
+                btnEl.classList.remove('flex');
+                // Re-insert form wrapper via simple re-render not needed, button is already in form
+            }
+        }
+    }
+})();
+</script>
+@endif
+@endpush

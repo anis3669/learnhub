@@ -15,6 +15,7 @@ use App\Models\StudentSkillAssessment;
 use App\Models\Badge;
 use App\Models\User;
 use App\Models\UserProgress;
+use App\Models\LessonVideoProgress;
 use App\Services\LearningPathService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -118,13 +119,20 @@ class StudentController extends Controller
         $prev = $course->lessons()->where('order', '<', $lesson->order)->orderByDesc('order')->first();
         $next = $course->lessons()->where('order', '>', $lesson->order)->orderBy('order')->first();
         $userProgress = UserProgress::firstOrCreate(['user_id' => $user->id, 'lesson_id' => $lesson->id], ['watch_percent' => 0]);
+        $videoProgress = LessonVideoProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
         $quiz = $lesson->quiz()->where('is_published', true)->first();
-        return view('student.lesson', compact('course', 'lesson', 'prev', 'next', 'userProgress', 'quiz'));
+        return view('student.lesson', compact('course', 'lesson', 'prev', 'next', 'userProgress', 'quiz', 'videoProgress'));
     }
 
     public function markComplete(Course $course, Lesson $lesson)
     {
         $user = Auth::user();
+        $videoProgress = LessonVideoProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+
+        if (!$videoProgress || $videoProgress->watch_percentage < 80) {
+            return redirect()->back()->with('error', 'You must watch at least 80% of the video before marking the lesson as complete.');
+        }
+
         UserProgress::updateOrCreate(
             ['user_id' => $user->id, 'lesson_id' => $lesson->id],
             ['is_completed' => true, 'watch_percent' => 100, 'completed_at' => now()]
@@ -149,6 +157,68 @@ class StudentController extends Controller
         $next = $course->lessons()->where('order', '>', $lesson->order)->orderBy('order')->first();
         if ($next) return redirect()->route('student.lesson', [$course, $next])->with('success', 'Lesson completed! +20 points 🎉');
         return redirect()->route('student.course.show', $course)->with('success', 'Course progress updated! +20 points 🎉');
+    }
+
+    public function saveVideoProgress(Request $request, Course $course, Lesson $lesson)
+    {
+        $request->validate([
+            'watched_seconds' => 'required|integer|min:0',
+            'duration_seconds' => 'required|integer|min:1',
+            'watch_percentage' => 'required|integer|min:0|max:100',
+        ]);
+
+        $user = Auth::user();
+        $duration = (int) $request->duration_seconds;
+        $percentage = (int) $request->watch_percentage;
+        $watched = (int) $request->watched_seconds;
+
+        $progress = LessonVideoProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+
+        if ($progress) {
+            $progress->watched_seconds = max($progress->watched_seconds, $watched);
+            $progress->duration_seconds = max($progress->duration_seconds, $duration);
+            $progress->watch_percentage = max($progress->watch_percentage, min(100, $percentage));
+            $progress->completed = $progress->watch_percentage >= 80;
+            $progress->save();
+        } else {
+            $progress = LessonVideoProgress::create([
+                'user_id' => $user->id,
+                'lesson_id' => $lesson->id,
+                'watched_seconds' => $watched,
+                'duration_seconds' => $duration,
+                'watch_percentage' => min(100, $percentage),
+                'completed' => $percentage >= 80,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'watch_percentage' => $progress->watch_percentage,
+            'completed' => $progress->completed,
+            'watched_seconds' => $progress->watched_seconds,
+        ]);
+    }
+
+    public function getVideoProgress(Course $course, Lesson $lesson)
+    {
+        $user = Auth::user();
+        $progress = LessonVideoProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
+
+        if (!$progress) {
+            return response()->json([
+                'watched_seconds' => 0,
+                'duration_seconds' => 0,
+                'watch_percentage' => 0,
+                'completed' => false,
+            ]);
+        }
+
+        return response()->json([
+            'watched_seconds' => $progress->watched_seconds,
+            'duration_seconds' => $progress->duration_seconds,
+            'watch_percentage' => $progress->watch_percentage,
+            'completed' => $progress->completed,
+        ]);
     }
 
     public function takeQuiz(Course $course, Quiz $quiz)
