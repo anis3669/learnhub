@@ -88,9 +88,15 @@ class StudentController extends Controller
     public function enroll(Course $course)
     {
         $user = Auth::user();
+
         if (!$this->learningPathService->canAccessCourse($user, $course)) {
             return redirect()->back()->with('error', 'Complete the prerequisite courses to unlock this level.');
         }
+
+        if ($course->requiresPayment()) {
+            return redirect()->route('student.course.payment.initiate', $course);
+        }
+
         Enrollment::firstOrCreate(['user_id' => $user->id, 'course_id' => $course->id], ['progress_percent' => 0]);
         return redirect()->route('student.course.show', $course)->with('success', "Enrolled in \"{$course->title}\" successfully!");
     }

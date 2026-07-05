@@ -94,6 +94,7 @@ class TeacherController extends Controller
             'description' => 'required',
             'category'    => 'required',
             'level'       => 'required',
+            'price'       => 'required_if:level,Advanced|numeric|min:0',
         ]);
         $course = Course::create([
             'teacher_id'     => Auth::id(),
@@ -102,6 +103,7 @@ class TeacherController extends Controller
             'category'       => $request->category,
             'level'          => $request->level,
             'duration_hours' => $request->duration_hours ?? 0,
+            'price'          => $request->price ?? 0,
             'is_published'   => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.course.show', $course)->with('success', 'Course created successfully!');
@@ -125,13 +127,14 @@ class TeacherController extends Controller
     public function updateCourse(Request $request, Course $course)
     {
         if ($course->teacher_id !== Auth::id()) abort(403);
-        $request->validate(['title' => 'required|max:255', 'description' => 'required', 'category' => 'required', 'level' => 'required']);
+        $request->validate(['title' => 'required|max:255', 'description' => 'required', 'category' => 'required', 'level' => 'required', 'price' => 'required_if:level,Advanced|numeric|min:0']);
         $course->update([
             'title'          => $request->title,
             'description'    => $request->description,
             'category'       => $request->category,
             'level'          => $request->level,
             'duration_hours' => $request->duration_hours ?? 0,
+            'price'          => $request->price ?? 0,
             'is_published'   => $request->has('is_published'),
         ]);
         return redirect()->route('teacher.course.show', $course)->with('success', 'Course updated!');

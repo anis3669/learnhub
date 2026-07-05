@@ -28,6 +28,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'khalti' => [
+        'secret' => env('KHALTI_SECRET_KEY'),
+        'public' => env('KHALTI_PUBLIC_KEY'),
+        'sandbox' => env('KHALTI_SANDBOX', true),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

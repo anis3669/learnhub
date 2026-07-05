@@ -38,7 +38,7 @@
             </select>
             <select name="level" class="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">All Levels</option>
-                @foreach(['Beginner', 'Intermediate', 'Advanced'] as $l)
+                @foreach(['Introduction', 'Beginner', 'Intermediate', 'Advanced'] as $l)
                 <option value="{{ $l }}" {{ request('level') == $l ? 'selected' : '' }}>{{ $l }}</option>
                 @endforeach
             </select>
@@ -71,6 +71,11 @@
                 </div>
                 @if(in_array($course->id, $enrolledIds))
                     <a href="{{ route('student.course.show', $course) }}" class="block text-center btn-primary w-full">Continue Learning →</a>
+                @elseif($course->requiresPayment())
+                    <form action="{{ route('student.course.payment.initiate', $course) }}" method="POST">
+                        @csrf
+                        <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition">Pay with Khalti (Rs. {{ number_format($course->price, 2) }})</button>
+                    </form>
                 @else
                     <form action="{{ route('student.enroll', $course) }}" method="POST">
                         @csrf

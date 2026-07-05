@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CoursePaymentController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
@@ -39,6 +40,9 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
     Route::get('/courses', [StudentController::class, 'courses'])->name('courses');
     Route::post('/courses/{course}/enroll', [StudentController::class, 'enroll'])->name('enroll');
+    Route::post('/courses/{course}/payment/initiate', [CoursePaymentController::class, 'initiate'])->name('course.payment.initiate');
+    Route::get('/payment/verify', [CoursePaymentController::class, 'verify'])->name('payment.verify');
+    Route::get('/payment/callback', [CoursePaymentController::class, 'callback'])->name('payment.callback');
     Route::get('/courses/{course}', [StudentController::class, 'showCourse'])->name('course.show');
     Route::get('/courses/{course}/lessons/{lesson}', [StudentController::class, 'watchLesson'])->name('lesson');
     Route::post('/courses/{course}/lessons/{lesson}/complete', [StudentController::class, 'markComplete'])->name('lesson.complete');

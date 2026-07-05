@@ -46,6 +46,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Duration (hours)</label>
                 <input type="number" name="duration_hours" value="{{ old('duration_hours', 0) }}" min="0" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
+            <div id="price-field" style="display: none;">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Price (for Advanced courses) *</label>
+                <input type="number" name="price" value="{{ old('price', 0) }}" min="0" step="0.01" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter price in Rs.">
+                <p class="text-xs text-gray-500 mt-1">Only visible when "Advanced" level is selected.</p>
+            </div>
             <div class="flex items-center gap-3">
                 <input type="checkbox" name="is_published" id="published" {{ old('is_published') ? 'checked' : '' }} class="w-4 h-4 text-indigo-600 rounded">
                 <label for="published" class="text-sm text-gray-700">Publish immediately (visible to students)</label>
@@ -57,4 +62,27 @@
         </form>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const levelSelect = document.querySelector('select[name="level"]');
+    const priceField = document.getElementById('price-field');
+    const priceInput = document.querySelector('input[name="price"]');
+
+    function togglePriceField() {
+        if (levelSelect.value === 'Advanced') {
+            priceField.style.display = 'block';
+            priceInput.required = true;
+            priceInput.min = '1';
+        } else {
+            priceField.style.display = 'none';
+            priceInput.required = false;
+            priceInput.min = '0';
+            priceInput.value = '0';
+        }
+    }
+
+    levelSelect.addEventListener('change', togglePriceField);
+    togglePriceField();
+});
+</script>
 @endsection

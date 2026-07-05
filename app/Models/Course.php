@@ -11,7 +11,7 @@ class Course extends Model
 
     protected $fillable = [
         'teacher_id', 'title', 'description', 'thumbnail', 'category',
-        'level', 'is_published', 'duration_hours',
+        'level', 'is_published', 'duration_hours', 'price',
     ];
 
     protected $casts = [
@@ -56,5 +56,15 @@ class Course extends Model
         $colors = ['6366f1', 'ec4899', 'f59e0b', '10b981', '3b82f6', 'ef4444'];
         $color = $colors[$this->id % count($colors)];
         return "https://via.placeholder.com/800x450/{$color}/ffffff?text=" . urlencode($this->title);
+    }
+
+    public function requiresPayment(): bool
+    {
+        return $this->level === 'Advanced' && $this->price > 0;
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(CoursePayment::class);
     }
 }
