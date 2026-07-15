@@ -54,7 +54,7 @@
         @forelse($courses as $course)
         <div class="card overflow-hidden hover:shadow-md transition-shadow">
             <div class="h-40 bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-5xl">
-                @php $icons = ['Programming'=>'💻','Web Development'=>'🌐','Computer Science'=>'🔬','AI & ML'=>'🤖','General'=>'📚']; @endphp
+                @php $icons = ['Programming'=>'💻','Web Development'=>'🌐','Computer Science'=>'🔬','AI & ML'=>'🤖','General'=>'📚','Premium'=>'👑']; @endphp
                 {{ $icons[$course->category] ?? '📖' }}
             </div>
             <div class="p-5">

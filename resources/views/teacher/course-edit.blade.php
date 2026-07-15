@@ -26,7 +26,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                     <select name="category" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm">
-                        @foreach(['Programming', 'Web Development', 'Computer Science', 'AI & ML', 'Data Science', 'Mobile Development', 'General'] as $cat)
+                        @foreach(['Programming', 'Web Development', 'Computer Science', 'AI & ML', 'Data Science', 'Mobile Development', 'General', 'Premium'] as $cat)
                         <option value="{{ $cat }}" {{ $course->category == $cat ? 'selected' : '' }}>{{ $cat }}</option>
                         @endforeach
                     </select>
