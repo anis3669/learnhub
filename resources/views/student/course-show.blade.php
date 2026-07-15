@@ -41,6 +41,9 @@
                     <div class="flex items-center gap-2 mb-2">
                         <span class="badge-pill bg-indigo-100 text-indigo-700">{{ $course->category }}</span>
                         <span class="badge-pill bg-gray-100 text-gray-700">{{ $course->level }}</span>
+                        @if($course->isPremium())
+                        <span class="badge-pill bg-purple-100 text-purple-700">Premium</span>
+                        @endif
                     </div>
                     <h2 class="text-xl font-bold text-gray-900">{{ $course->title }}</h2>
                     <p class="text-gray-600 mt-1">By {{ $course->teacher->name }}</p>

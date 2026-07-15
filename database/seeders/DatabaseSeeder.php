@@ -17,49 +17,50 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         foreach (['admin', 'teacher', 'student'] as $role) {
             Role::firstOrCreate(['name' => $role]);
         }
 
         $admin = User::updateOrCreate(['email' => 'admin@learnhub.com'], [
-            'name' => 'Admin User', 'password' => Hash::make('password'), 'points' => 0, 'bio' => 'Platform Administrator',
+            'name' => 'Admin User', 'password' => Hash::make('password'), 'points' => 0, 'bio' => 'Platform Administrator', 'phone' => '9800000000',
         ]);
         $admin->syncRoles(['admin']);
 
         $teacher1 = User::updateOrCreate(['email' => 'teacher@learnhub.com'], [
             'name' => 'Dr.Karan Thapa', 'password' => Hash::make('password'), 'points' => 500,
-            'bio'  => 'Senior Computer Science Professor with 10 years of experience.',
+            'bio' => 'Senior Computer Science Professor with 10 years of experience.', 'phone' => '9800000001',
         ]);
         $teacher1->syncRoles(['teacher']);
 
         $teacher2 = User::updateOrCreate(['email' => 'teacher2@learnhub.com'], [
             'name' => 'Prof.Muansu Regmi ', 'password' => Hash::make('password'), 'points' => 350,
-            'bio'  => 'Web Development expert and full-stack developer.',
+            'bio' => 'Web Development expert and full-stack developer.', 'phone' => '9800000002',
         ]);
         $teacher2->syncRoles(['teacher']);
 
         $studentData = [
-            ['name' => 'Alice Rai',      'email' => 'alice@learnhub.com',   'points' => 850],
-            ['name' => 'Bibek Yadav',    'email' => 'bibek@learnhub.com',   'points' => 720],
-            ['name' => 'Kushal Bhurtel', 'email' => 'kushal@learnhub.com',  'points' => 650],
-            ['name' => 'David Warner',   'email' => 'david@learnhub.com',   'points' => 580],
-            ['name' => 'Asif Sheikh',    'email' => 'asif@learnhub.com',    'points' => 920],
-            ['name' => 'Arif Sheikh',    'email' => 'arif@learnhub.com',    'points' => 430],
-            ['name' => 'Kim Jong',       'email' => 'kim@learnhub.com',     'points' => 770],
-            ['name' => 'Henry Klasein',  'email' => 'henry@learnhub.com',   'points' => 310],
-            ['name' => 'Student1',       'email' => 'student@learnhub.com', 'points' => 450],
+            ['name' => 'Alice Rai',      'email' => 'alice@learnhub.com',   'points' => 850, 'phone' => '9800000003'],
+            ['name' => 'Bibek Yadav',    'email' => 'bibek@learnhub.com',   'points' => 720, 'phone' => '9800000004'],
+            ['name' => 'Kushal Bhurtel', 'email' => 'kushal@learnhub.com',  'points' => 650, 'phone' => '9800000005'],
+            ['name' => 'David Warner',   'email' => 'david@learnhub.com',   'points' => 580, 'phone' => '9800000006'],
+            ['name' => 'Asif Sheikh',    'email' => 'asif@learnhub.com',    'points' => 920, 'phone' => '9800000007'],
+            ['name' => 'Arif Sheikh',    'email' => 'arif@learnhub.com',    'points' => 430, 'phone' => '9800000008'],
+            ['name' => 'Kim Jong',       'email' => 'kim@learnhub.com',     'points' => 770, 'phone' => '9800000009'],
+            ['name' => 'Henry Klasein',  'email' => 'henry@learnhub.com',   'points' => 310, 'phone' => '9800000010'],
+            ['name' => 'Student1',       'email' => 'student@learnhub.com', 'points' => 450, 'phone' => '9800000011'],
         ];
         $students = [];
         foreach ($studentData as $sd) {
             $s = User::updateOrCreate(['email' => $sd['email']], [
-                'name' => $sd['name'], 'password' => Hash::make('password'), 'points' => $sd['points'], 'bio' => 'Passionate learner.',
+                'name' => $sd['name'], 'password' => Hash::make('password'), 'points' => $sd['points'], 'bio' => 'Passionate learner.', 'phone' => $sd['phone'],
             ]);
             $s->syncRoles(['student']);
             $students[] = $s;
@@ -81,33 +82,33 @@ class DatabaseSeeder extends Seeder
 
         // Introduction course (new)
         $courseIntro = Course::firstOrCreate(['title' => 'Introduction to Coding'], [
-            'teacher_id'     => $teacher1->id,
-            'description'    => 'A complete beginner\'s guide to programming. Learn the fundamentals of coding with simple exercises — no prior experience needed. Perfect if you\'ve never coded before.',
-            'category'       => 'Programming',
-            'level'          => 'Introduction',
-            'is_published'   => true,
+            'teacher_id' => $teacher1->id,
+            'description' => 'A complete beginner\'s guide to programming. Learn the fundamentals of coding with simple exercises — no prior experience needed. Perfect if you\'ve never coded before.',
+            'category' => 'Programming',
+            'level' => 'Introduction',
+            'is_published' => true,
             'duration_hours' => 8,
         ]);
 
         $course1 = Course::firstOrCreate(['title' => 'Introduction to Python Programming'], [
-            'teacher_id'     => $teacher1->id,
-            'description'    => 'Learn Python from scratch. This comprehensive course covers variables, loops, functions, OOP, and real-world projects. Perfect for beginners wanting to start their coding journey.',
-            'category'       => 'Programming', 'level' => 'Beginner', 'is_published' => true, 'duration_hours' => 12,
+            'teacher_id' => $teacher1->id,
+            'description' => 'Learn Python from scratch. This comprehensive course covers variables, loops, functions, OOP, and real-world projects. Perfect for beginners wanting to start their coding journey.',
+            'category' => 'Programming', 'level' => 'Beginner', 'is_published' => true, 'duration_hours' => 12,
         ]);
         $course2 = Course::firstOrCreate(['title' => 'Web Development with Laravel'], [
-            'teacher_id'     => $teacher2->id,
-            'description'    => 'Master Laravel 12, the PHP framework for artisans. Build real-world web applications with authentication, databases, APIs and more.',
-            'category'       => 'Web Development', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 20,
+            'teacher_id' => $teacher2->id,
+            'description' => 'Master Laravel 12, the PHP framework for artisans. Build real-world web applications with authentication, databases, APIs and more.',
+            'category' => 'Web Development', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 20,
         ]);
         $course3 = Course::firstOrCreate(['title' => 'Data Structures & Algorithms'], [
-            'teacher_id'     => $teacher1->id,
-            'description'    => 'Master the fundamental concepts of Data Structures and Algorithms. Learn sorting, searching, trees, graphs, and dynamic programming.',
-            'category'       => 'Computer Science', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 16,
+            'teacher_id' => $teacher1->id,
+            'description' => 'Master the fundamental concepts of Data Structures and Algorithms. Learn sorting, searching, trees, graphs, and dynamic programming.',
+            'category' => 'Computer Science', 'level' => 'Intermediate', 'is_published' => true, 'duration_hours' => 16,
         ]);
         $course4 = Course::firstOrCreate(['title' => 'Machine Learning Fundamentals'], [
-            'teacher_id'     => $teacher2->id,
-            'description'    => 'An introduction to Machine Learning concepts including supervised learning, neural networks, and model evaluation.',
-            'category'       => 'AI & ML', 'level' => 'Advanced', 'is_published' => true, 'duration_hours' => 18,
+            'teacher_id' => $teacher2->id,
+            'description' => 'An introduction to Machine Learning concepts including supervised learning, neural networks, and model evaluation.',
+            'category' => 'AI & ML', 'level' => 'Advanced', 'is_published' => true, 'duration_hours' => 18,
         ]);
 
         // Course unlock rules
@@ -172,7 +173,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $l1 = Lesson::where('course_id', $course1->id)->first();
-        if ($l1 && !Quiz::where('course_id', $course1->id)->exists()) {
+        if ($l1 && ! Quiz::where('course_id', $course1->id)->exists()) {
             $quiz1 = Quiz::create([
                 'course_id' => $course1->id, 'lesson_id' => $l1->id,
                 'title' => 'Python Basics Quiz', 'description' => 'Test your understanding of Python fundamentals.',
@@ -196,7 +197,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $l3 = Lesson::where('course_id', $course3->id)->where('order', 3)->first();
-        if ($l3 && !Quiz::where('course_id', $course3->id)->exists()) {
+        if ($l3 && ! Quiz::where('course_id', $course3->id)->exists()) {
             $quiz2 = Quiz::create([
                 'course_id' => $course3->id, 'lesson_id' => $l3->id,
                 'title' => 'Sorting Algorithms Quiz', 'description' => 'Test your knowledge of sorting algorithms.',
@@ -235,17 +236,21 @@ class DatabaseSeeder extends Seeder
             ['title' => 'Difference between list and tuple?',              'body' => 'I understand lists are mutable and tuples are immutable, but when should I use each one in real code?'],
         ];
         foreach ($discussionTopics as $i => $dd) {
-            if (!DiscussionPost::where('title', $dd['title'])->exists()) {
+            if (! DiscussionPost::where('title', $dd['title'])->exists()) {
                 $post = DiscussionPost::create(array_merge($dd, ['course_id' => $course1->id, 'user_id' => $students[$i]->id]));
                 DiscussionReply::create(['post_id' => $post->id, 'user_id' => $teacher1->id, 'body' => 'Great question! Let me explain this with some examples. This is a common topic that many beginners struggle with, but once you understand it you will find it very useful.']);
             }
         }
 
         $firstBadge = Badge::where('name', 'First Steps')->first();
-        $topBadge   = Badge::where('name', 'Top Scorer')->first();
+        $topBadge = Badge::where('name', 'Top Scorer')->first();
         foreach ($students as $s) {
-            if ($firstBadge) DB::table('user_badges')->updateOrInsert(['user_id' => $s->id, 'badge_id' => $firstBadge->id], ['earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
-            if ($topBadge && $s->points >= 500) DB::table('user_badges')->updateOrInsert(['user_id' => $s->id, 'badge_id' => $topBadge->id], ['earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
+            if ($firstBadge) {
+                DB::table('user_badges')->updateOrInsert(['user_id' => $s->id, 'badge_id' => $firstBadge->id], ['earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
+            }
+            if ($topBadge && $s->points >= 500) {
+                DB::table('user_badges')->updateOrInsert(['user_id' => $s->id, 'badge_id' => $topBadge->id], ['earned_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
+            }
         }
 
         $this->command->info('✅ Seeded! Login: admin@learnhub.com | teacher@learnhub.com | student@learnhub.com (password: password)');

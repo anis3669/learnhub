@@ -3,17 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'points', 'avatar', 'bio',
+        'name', 'email', 'password', 'points', 'avatar', 'bio', 'phone',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -64,9 +63,10 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+            return asset('storage/'.$this->avatar);
         }
         $name = urlencode($this->name);
+
         return "https://ui-avatars.com/api/?name={$name}&background=6366f1&color=fff&size=128";
     }
 

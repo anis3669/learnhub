@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\LessonResource\Pages\CreateLesson;
+use App\Filament\Resources\LessonResource\Pages\EditLesson;
+use App\Filament\Resources\LessonResource\Pages\ListLessons;
 use App\Models\Lesson;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,7 +15,9 @@ use Filament\Tables\Table;
 class LessonResource extends Resource
 {
     protected static ?string $model = Lesson::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-play-circle';
+
     protected static ?string $navigationGroup = 'Courses';
 
     public static function form(Form $form): Form
@@ -58,9 +63,9 @@ class LessonResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => \App\Filament\Resources\LessonResource\Pages\ListLessons::route('/'),
-            'create' => \App\Filament\Resources\LessonResource\Pages\CreateLesson::route('/create'),
-            'edit'   => \App\Filament\Resources\LessonResource\Pages\EditLesson::route('/{record}/edit'),
+            'index' => ListLessons::route('/'),
+            'create' => CreateLesson::route('/create'),
+            'edit' => EditLesson::route('/{record}/edit'),
         ];
     }
 }

@@ -1,23 +1,29 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CoursePaymentController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\AdminController;
 use App\Models\User;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (Auth::check()) {
         /** @var User $user */
         $user = Auth::user();
-        if ($user->hasRole('admin')) return redirect()->route('admin.dashboard');
-        if ($user->hasRole('teacher')) return redirect()->route('teacher.dashboard');
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($user->hasRole('teacher')) {
+            return redirect()->route('teacher.dashboard');
+        }
+
         return redirect()->route('student.dashboard');
     }
+
     return view('welcome');
 })->name('home');
 
@@ -25,8 +31,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         /** @var User $user */
         $user = Auth::user();
-        if ($user->hasRole('admin')) return redirect()->route('admin.dashboard');
-        if ($user->hasRole('teacher')) return redirect()->route('teacher.dashboard');
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($user->hasRole('teacher')) {
+            return redirect()->route('teacher.dashboard');
+        }
+
         return redirect()->route('student.dashboard');
     })->name('dashboard');
 
@@ -107,4 +118,4 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/course-permissions/{permission}', [AdminController::class, 'revokeCoursePermission'])->name('course-permissions.revoke');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

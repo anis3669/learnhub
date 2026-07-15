@@ -15,10 +15,12 @@ class CoursePayment extends Model
         'pidx',
         'transaction_id',
         'status',
+        'paid_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'paid_at' => 'datetime',
     ];
 
     public function user()

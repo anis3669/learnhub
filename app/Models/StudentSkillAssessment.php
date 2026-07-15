@@ -23,7 +23,10 @@ class StudentSkillAssessment extends Model
 
     public function getScorePercentAttribute(): int
     {
-        if (!$this->total_questions) return 0;
+        if (! $this->total_questions) {
+            return 0;
+        }
+
         return (int) round(($this->correct_answers / $this->total_questions) * 100);
     }
 

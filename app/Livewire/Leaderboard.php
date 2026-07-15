@@ -15,8 +15,8 @@ class Leaderboard extends Component
 
         $data = $students->map(function ($student) {
             return [
-                'id'    => $student->id,
-                'name'  => $student->name,
+                'id' => $student->id,
+                'name' => $student->name,
                 'score' => rand(600, 1000),   // temporary score for testing
             ];
         })->sortByDesc('score')->values()->toArray();
@@ -27,7 +27,7 @@ class Leaderboard extends Component
     public function render()
     {
         return view('livewire.leaderboard', [
-            'leaderboard' => $this->leaderboard   // ← This is the important line
+            'leaderboard' => $this->leaderboard,   // ← This is the important line
         ]);
     }
 }

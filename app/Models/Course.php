@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
@@ -51,16 +51,22 @@ class Course extends Model
     public function getThumbnailUrlAttribute()
     {
         if ($this->thumbnail) {
-            return asset('storage/' . $this->thumbnail);
+            return asset('storage/'.$this->thumbnail);
         }
         $colors = ['6366f1', 'ec4899', 'f59e0b', '10b981', '3b82f6', 'ef4444'];
         $color = $colors[$this->id % count($colors)];
-        return "https://via.placeholder.com/800x450/{$color}/ffffff?text=" . urlencode($this->title);
+
+        return "https://via.placeholder.com/800x450/{$color}/ffffff?text=".urlencode($this->title);
     }
 
     public function requiresPayment(): bool
     {
-        return $this->level === 'Advanced' && $this->price > 0;
+        return $this->category === 'Premium' && $this->price > 0;
+    }
+
+    public function isPremium(): bool
+    {
+        return $this->category === 'Premium';
     }
 
     public function payment()

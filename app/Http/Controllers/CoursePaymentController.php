@@ -5,17 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\CoursePayment;
 use App\Models\Enrollment;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Exception;
 
 class CoursePaymentController extends Controller
 {
     protected string $khaltiSecretKey;
+
     protected string $khaltiBaseUrl;
 
     public function __construct()
@@ -30,7 +31,12 @@ class CoursePaymentController extends Controller
     {
         $user = Auth::user();
 
-        if (!$course->requiresPayment()) {
+        if (! $user->phone) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Please add your phone number in your profile before making a payment.');
+        }
+
+        if (! $course->requiresPayment()) {
             return redirect()->route('student.course.show', $course)
                 ->with('error', 'This course does not require payment.');
         }
@@ -52,14 +58,14 @@ class CoursePaymentController extends Controller
                 ->with('success', 'Payment already completed for this course.');
         }
 
-        $purchaseOrderId = 'course_' . $course->id . '_user_' . $user->id . '_' . Str::random(8);
-        $amount = (int)($course->price * 100);
+        $purchaseOrderId = 'course_'.$course->id.'_user_'.$user->id.'_'.Str::random(8);
+        $amount = (int) ($course->price * 100);
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Key ' . $this->khaltiSecretKey,
+                'Authorization' => 'Key '.$this->khaltiSecretKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->khaltiBaseUrl . '/epayment/initiate/', [
+            ])->post($this->khaltiBaseUrl.'/epayment/initiate/', [
                 'return_url' => route('student.payment.callback'),
                 'website_url' => config('app.url'),
                 'amount' => $amount,
@@ -78,6 +84,7 @@ class CoursePaymentController extends Controller
                     'course_id' => $course->id,
                     'user_id' => $user->id,
                 ]);
+
                 return redirect()->route('student.courses')
                     ->with('error', 'Failed to initiate payment. Please try again.');
             }
@@ -94,7 +101,7 @@ class CoursePaymentController extends Controller
                 'status' => 'pending',
             ]);
 
-            if (!isset($data['payment_url'])) {
+            if (! isset($data['payment_url'])) {
                 throw new Exception('Invalid response from Khalti: missing payment_url');
             }
 
@@ -112,14 +119,14 @@ class CoursePaymentController extends Controller
     {
         $pidx = $request->query('pidx') ?? $request->input('pidx');
 
-        if (!$pidx) {
+        if (! $pidx) {
             return redirect()->route('student.courses')
                 ->with('error', 'Invalid payment response received.');
         }
 
         $payment = CoursePayment::where('pidx', $pidx)->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return redirect()->route('student.courses')
                 ->with('error', 'Payment record not found.');
         }
@@ -136,7 +143,7 @@ class CoursePaymentController extends Controller
     {
         $pidx = $request->query('pidx');
 
-        if (!$pidx) {
+        if (! $pidx) {
             return redirect()->route('student.courses')
                 ->with('error', 'No payment reference provided.');
         }
@@ -150,9 +157,9 @@ class CoursePaymentController extends Controller
     {
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Key ' . $this->khaltiSecretKey,
+                'Authorization' => 'Key '.$this->khaltiSecretKey,
                 'Content-Type' => 'application/json',
-            ])->get($this->khaltiBaseUrl . '/epayment/lookup/', [
+            ])->get($this->khaltiBaseUrl.'/epayment/lookup/', [
                 'pidx' => $pidx,
             ]);
 
@@ -169,8 +176,9 @@ class CoursePaymentController extends Controller
 
             $data = $response->json();
 
-            if (!isset($data['status'])) {
+            if (! isset($data['status'])) {
                 $payment->update(['status' => 'failed']);
+
                 return redirect()->route('student.courses')
                     ->with('error', 'Invalid payment response.');
             }
@@ -183,6 +191,7 @@ class CoursePaymentController extends Controller
                         $payment->update([
                             'status' => 'completed',
                             'transaction_id' => $data['transaction_id'] ?? null,
+                            'paid_at' => now(),
                         ]);
 
                         Enrollment::firstOrCreate(
@@ -198,6 +207,7 @@ class CoursePaymentController extends Controller
 
             if ($status === 'user canceled' || $status === 'expired') {
                 $payment->update(['status' => 'cancelled']);
+
                 return redirect()->route('student.courses')
                     ->with('error', 'Payment was cancelled or expired. Please try again.');
             }
@@ -210,7 +220,7 @@ class CoursePaymentController extends Controller
             }
 
             return redirect()->route('student.courses')
-                ->with('error', 'Payment status: ' . $data['status'] . '. Please try again.');
+                ->with('error', 'Payment status: '.$data['status'].'. Please try again.');
 
         } catch (Exception $e) {
             Log::error('Khalti payment verification error', ['message' => $e->getMessage()]);

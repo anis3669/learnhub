@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StudentSkillAssessment;
 use App\Services\LearningPathService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,11 +14,12 @@ class OnboardingController extends Controller
     public function assessment()
     {
         $user = Auth::user();
-        $assessment = \App\Models\StudentSkillAssessment::where('user_id', $user->id)->first();
+        $assessment = StudentSkillAssessment::where('user_id', $user->id)->first();
         if ($assessment && $assessment->completed) {
             return redirect()->route('student.dashboard');
         }
         $questions = $this->learningPathService->getAssessmentQuestions();
+
         return view('student.onboarding', compact('questions'));
     }
 
@@ -26,8 +28,9 @@ class OnboardingController extends Controller
         $user = Auth::user();
         $familiar = $request->boolean('familiar');
 
-        if (!$familiar) {
+        if (! $familiar) {
             $this->learningPathService->processFamiliarityResponse($user, false);
+
             return redirect()->route('student.dashboard')
                 ->with('success', 'Welcome! We\'ve set up your Introduction learning path. 🚀');
         }

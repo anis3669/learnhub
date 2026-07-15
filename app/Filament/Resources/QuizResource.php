@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\QuizResource\Pages\CreateQuiz;
+use App\Filament\Resources\QuizResource\Pages\EditQuiz;
+use App\Filament\Resources\QuizResource\Pages\ListQuizzes;
 use App\Models\Quiz;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,7 +15,9 @@ use Filament\Tables\Table;
 class QuizResource extends Resource
 {
     protected static ?string $model = Quiz::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
+
     protected static ?string $navigationGroup = 'Courses';
 
     public static function form(Form $form): Form
@@ -63,9 +68,9 @@ class QuizResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => \App\Filament\Resources\QuizResource\Pages\ListQuizzes::route('/'),
-            'create' => \App\Filament\Resources\QuizResource\Pages\CreateQuiz::route('/create'),
-            'edit'   => \App\Filament\Resources\QuizResource\Pages\EditQuiz::route('/{record}/edit'),
+            'index' => ListQuizzes::route('/'),
+            'create' => CreateQuiz::route('/create'),
+            'edit' => EditQuiz::route('/{record}/edit'),
         ];
     }
 }

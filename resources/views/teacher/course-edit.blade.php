@@ -44,10 +44,10 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Duration (hours)</label>
                 <input type="number" name="duration_hours" value="{{ $course->duration_hours }}" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm">
             </div>
-            <div id="price-field" style="{{ $course->level !== 'Advanced' ? 'display: none;' : '' }}">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Price (for Advanced courses) *</label>
-                <input type="number" name="price" value="{{ $course->price }}" min="0" step="0.01" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter price in Rs.">
-                <p class="text-xs text-gray-500 mt-1">Only visible when "Advanced" level is selected.</p>
+            <div id="price-field" style="{{ $course->category !== 'Premium' ? 'display: none;' : '' }}">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Price (for Premium courses) *</label>
+                <input type="number" name="price" value="{{ $course->price }}" min="1" step="0.01" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter price in Rs.">
+                <p class="text-xs text-gray-500 mt-1">Only visible when "Premium" category is selected.</p>
             </div>
             <div class="flex items-center gap-3">
                 <input type="checkbox" name="is_published" id="published" {{ $course->is_published ? 'checked' : '' }} class="w-4 h-4 text-indigo-600 rounded">
@@ -62,12 +62,12 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const levelSelect = document.querySelector('select[name="level"]');
+    const categorySelect = document.querySelector('select[name="category"]');
     const priceField = document.getElementById('price-field');
     const priceInput = document.querySelector('input[name="price"]');
 
     function togglePriceField() {
-        if (levelSelect.value === 'Advanced') {
+        if (categorySelect.value === 'Premium') {
             priceField.style.display = 'block';
             priceInput.required = true;
             priceInput.min = '1';
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    levelSelect.addEventListener('change', togglePriceField);
+    categorySelect.addEventListener('change', togglePriceField);
     togglePriceField();
 });
 </script>

@@ -60,7 +60,10 @@
             <div class="p-5">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="badge-pill bg-indigo-100 text-indigo-700">{{ $course->category }}</span>
-                    <span class="badge-pill {{ $course->level === 'Beginner' ? 'bg-green-100 text-green-700' : ($course->level === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700') }}">{{ $course->level }}</span>
+                    <span class="badge-pill {{ $course->level === 'Beginner' ? 'bg-green-100 text-green-700' : ($course->level === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700') }}">{{ $course->level }}</span>
+                    @if($course->isPremium())
+                    <span class="badge-pill bg-purple-100 text-purple-700">Premium</span>
+                    @endif
                 </div>
                 <h3 class="font-semibold text-gray-900 mb-1 line-clamp-2">{{ $course->title }}</h3>
                 <p class="text-sm text-gray-500 mb-3 line-clamp-2">{{ $course->description }}</p>
@@ -71,10 +74,10 @@
                 </div>
                 @if(in_array($course->id, $enrolledIds))
                     <a href="{{ route('student.course.show', $course) }}" class="block text-center btn-primary w-full">Continue Learning →</a>
-                @elseif($course->requiresPayment())
+                @elseif($course->isPremium())
                     <form action="{{ route('student.course.payment.initiate', $course) }}" method="POST">
                         @csrf
-                        <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition">Pay with Khalti (Rs. {{ number_format($course->price, 2) }})</button>
+                        <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition">Buy Now (Rs. {{ number_format($course->price, 2) }})</button>
                     </form>
                 @else
                     <form action="{{ route('student.enroll', $course) }}" method="POST">
