@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AttemptAnswer;
 use App\Models\Badge;
 use App\Models\Course;
+use App\Models\CoursePayment;
 use App\Models\DiscussionPost;
 use App\Models\DiscussionReply;
 use App\Models\Enrollment;
@@ -90,7 +91,8 @@ class StudentController extends Controller
     {
         $user = Auth::user();
 
-        if ($course->isPremium()) {
+        // Premium courses with a price must go through Khalti payment first.
+        if ($course->requiresPayment()) {
             return redirect()->route('student.course.payment.initiate', $course);
         }
 
@@ -107,6 +109,20 @@ class StudentController extends Controller
     {
         $user = Auth::user();
         $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
+
+        // Premium courses are only accessible after a verified, completed payment.
+        if ($course->requiresPayment()) {
+            $paid = CoursePayment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->where('status', 'completed')
+                ->exists();
+
+            if (! $enrollment || ! $paid) {
+                return redirect()->route('student.courses')
+                    ->with('error', 'Please complete the payment to access this premium course.');
+            }
+        }
+
         if (! $enrollment) {
             return redirect()->route('student.courses')->with('error', 'Please enroll in the course first.');
         }

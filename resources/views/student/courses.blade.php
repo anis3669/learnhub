@@ -74,7 +74,7 @@
                 </div>
                 @if(in_array($course->id, $enrolledIds))
                     <a href="{{ route('student.course.show', $course) }}" class="block text-center btn-primary w-full">Continue Learning →</a>
-                @elseif($course->isPremium())
+                @elseif($course->requiresPayment())
                     <form action="{{ route('student.course.payment.initiate', $course) }}" method="POST">
                         @csrf
                         <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition">Buy Now (Rs. {{ number_format($course->price, 2) }})</button>

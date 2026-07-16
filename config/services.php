@@ -32,6 +32,14 @@ return [
         'secret' => env('KHALTI_SECRET_KEY'),
         'public' => env('KHALTI_PUBLIC_KEY'),
         'sandbox' => env('KHALTI_SANDBOX', true),
+        // Base URLs per the official Khalti ePayment (KPG-2) documentation.
+        // Sandbox:    https://dev.khalti.com/api/v2
+        // Production: https://a.khalti.com/api/v2
+        'base_url' => env('KHALTI_SANDBOX', true)
+            ? 'https://dev.khalti.com/api/v2'
+            : 'https://a.khalti.com/api/v2',
+        // Publicly reachable URL registered with Khalti (must be a real, valid URL).
+        'website_url' => env('KHALTI_WEBSITE_URL', config('app.url')),
     ],
 
     'slack' => [
