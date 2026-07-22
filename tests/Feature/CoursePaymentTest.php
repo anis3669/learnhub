@@ -184,7 +184,7 @@ it('converts 9.99 NPR to 999 paisa when initiating', function () {
         ], 200),
     ]);
 
-    $course = Course::factory()->create(['category' => 'Premium', 'price' => 9.99]);
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 10.00]);
 
     $this->actingAs($this->student)
         ->post(route('student.course.payment.initiate', $course))
@@ -192,12 +192,11 @@ it('converts 9.99 NPR to 999 paisa when initiating', function () {
 
     Http::assertSent(function ($request) {
         return $request->url() === config('services.khalti.base_url').'/epayment/initiate/'
-            && $request['amount'] === 999; // 9.99 * 100
+            && $request['amount'] === 1000; // 10.00 * 100
     });
 
-    // DB stores the amount in NPR (decimal), not paisa.
     $payment = CoursePayment::where('pidx', 'PIDX_999')->first();
-    expect((float) $payment->amount)->toBe(9.99);
+    expect((float) $payment->amount)->toBe(10.00);
 });
 
 it('converts 100 NPR to 10000 paisa when initiating', function () {
@@ -433,4 +432,142 @@ it('does not create a duplicate pending payment when one already exists', functi
     expect(CoursePayment::where('user_id', $this->student->id)
         ->where('course_id', $course->id)
         ->where('status', 'pending')->count())->toBe(1);
+});
+
+it('rejects payment initiation when amount is below minimum 1000 paisa', function () {
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 9.99]);
+
+    $this->actingAs($this->student)
+        ->post(route('student.course.payment.initiate', $course))
+        ->assertRedirect(route('student.courses'))
+        ->assertSessionHas('error');
+
+    expect(CoursePayment::count())->toBe(0);
+});
+
+it('handles partially refunded payment without enrolling', function () {
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 100.00]);
+    CoursePayment::create([
+        'user_id' => $this->student->id,
+        'course_id' => $course->id,
+        'amount' => 100.00,
+        'payment_gateway' => 'khalti',
+        'purchase_order_id' => 'order_partial',
+        'pidx' => 'TEST_PIDX_PARTIAL',
+        'status' => 'pending',
+    ]);
+
+    Http::fake([
+        '*/epayment/lookup/*' => Http::response([
+            'pidx' => 'TEST_PIDX_PARTIAL',
+            'status' => 'Partially refunded',
+            'transaction_id' => 'TXN_PARTIAL',
+            'total_amount' => 10000,
+            'fee' => 0,
+            'refunded' => true,
+        ], 200),
+    ]);
+
+    $this->actingAs($this->student)
+        ->get(route('student.payment.callback', ['pidx' => 'TEST_PIDX_PARTIAL']))
+        ->assertRedirect(route('student.courses'));
+
+    expect(CoursePayment::where('pidx', 'TEST_PIDX_PARTIAL')->first()->status)->toBe('refunded');
+    expect(Enrollment::where('user_id', $this->student->id)->where('course_id', $course->id)->exists())->toBeFalse();
+});
+
+it('rejects callback with mismatched purchase_order_id', function () {
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 100.00]);
+    CoursePayment::create([
+        'user_id' => $this->student->id,
+        'course_id' => $course->id,
+        'amount' => 100.00,
+        'payment_gateway' => 'khalti',
+        'purchase_order_id' => 'order_expected',
+        'pidx' => 'TEST_PIDX_MISMATCH_PO',
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->student)
+        ->get(route('student.payment.callback', ['pidx' => 'TEST_PIDX_MISMATCH_PO', 'purchase_order_id' => 'order_wrong']))
+        ->assertRedirect(route('student.courses'));
+
+    expect(Enrollment::where('user_id', $this->student->id)->where('course_id', $course->id)->exists())->toBeFalse();
+});
+
+it('includes merchant_extra and merchant_username in initiate payload', function () {
+    Http::fake([
+        '*/epayment/initiate/*' => Http::response([
+            'pidx' => 'PIDX_MERCHANT',
+            'payment_url' => 'https://pay.khalti.com/PIDX_MERCHANT',
+        ], 200),
+    ]);
+
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 100.00]);
+
+    $this->actingAs($this->student)
+        ->post(route('student.course.payment.initiate', $course))
+        ->assertRedirect('https://pay.khalti.com/PIDX_MERCHANT');
+
+    Http::assertSent(function ($request) use ($course) {
+        $payload = json_decode($request->body(), true);
+
+        return $request->url() === config('services.khalti.base_url').'/epayment/initiate/'
+            && isset($payload['merchant_extra'])
+            && isset($payload['merchant_username'])
+            && str_contains($payload['merchant_extra'], '"course_id":'.$course->id)
+            && str_contains($payload['merchant_extra'], '"user_id":'.$this->student->id);
+    });
+});
+
+it('logs fee and refunded fields from lookup response', function () {
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 100.00]);
+    $payment = CoursePayment::create([
+        'user_id' => $this->student->id,
+        'course_id' => $course->id,
+        'amount' => 100.00,
+        'payment_gateway' => 'khalti',
+        'purchase_order_id' => 'order_fee',
+        'pidx' => 'TEST_PIDX_FEE',
+        'status' => 'pending',
+    ]);
+
+    Http::fake([
+        '*/epayment/lookup/*' => Http::response([
+            'pidx' => 'TEST_PIDX_FEE',
+            'status' => 'Completed',
+            'transaction_id' => 'TXN_FEE',
+            'total_amount' => 10000,
+            'fee' => 50,
+            'refunded' => false,
+        ], 200),
+    ]);
+
+    $this->actingAs($this->student)
+        ->get(route('student.payment.callback', ['pidx' => 'TEST_PIDX_FEE']))
+        ->assertRedirect(route('student.course.show', $course));
+
+    expect($payment->refresh()->status)->toBe('completed');
+});
+
+it('uses correct production base URL when sandbox is disabled', function () {
+    config()->set('services.khalti.sandbox', false);
+    config()->set('services.khalti.base_url', 'https://khalti.com/api/v2');
+
+    Http::fake([
+        '*/epayment/initiate/*' => Http::response([
+            'pidx' => 'PIDX_PROD_URL',
+            'payment_url' => 'https://pay.khalti.com/PIDX_PROD_URL',
+        ], 200),
+    ]);
+
+    $course = Course::factory()->create(['category' => 'Premium', 'price' => 100.00]);
+
+    $this->actingAs($this->student)
+        ->post(route('student.course.payment.initiate', $course))
+        ->assertRedirect('https://pay.khalti.com/PIDX_PROD_URL');
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), 'khalti.com/api/v2/epayment/initiate/');
+    });
 });
