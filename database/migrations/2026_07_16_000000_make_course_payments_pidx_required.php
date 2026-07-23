@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,7 +13,7 @@ return new class extends Migration
             // Forged-callback protection relies on pidx being a non-null, unique
             // reference. Drop any legacy NULL pidx rows first, then tighten the column.
             if (Schema::hasColumn('course_payments', 'pidx')) {
-                \Illuminate\Support\Facades\DB::table('course_payments')
+                DB::table('course_payments')
                     ->whereNull('pidx')
                     ->delete();
 

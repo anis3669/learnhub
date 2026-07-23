@@ -21,6 +21,12 @@ class CoursePaymentController extends Controller
 
     protected string $khaltiWebsiteUrl;
 
+    protected array $allowedKhaltiHosts = [
+        'pay.khalti.com',
+        'test-pay.khalti.com',
+        'khalti.com',
+    ];
+
     public function __construct()
     {
         $this->khaltiSecretKey = (string) config('services.khalti.secret');
@@ -153,6 +159,17 @@ class CoursePaymentController extends Controller
                     ->with('error', 'Invalid response from payment gateway. Please try again.');
             }
 
+            $paymentUrl = $data['payment_url'];
+            if (! $this->isAllowedKhaltiHost($paymentUrl)) {
+                Log::error('Khalti returned a non-whitelisted payment URL', [
+                    'url' => $paymentUrl,
+                    'pidx' => $data['pidx'],
+                ]);
+
+                return redirect()->route('student.courses')
+                    ->with('error', 'Invalid payment gateway response. Please contact support.');
+            }
+
             CoursePayment::create([
                 'user_id' => $user->id,
                 'course_id' => $course->id,
@@ -172,7 +189,7 @@ class CoursePaymentController extends Controller
                 'amount_sent_paisa' => $amount,
             ]);
 
-            return redirect()->away($data['payment_url']);
+            return redirect()->away($paymentUrl);
         } catch (Exception $e) {
             Log::error('Khalti payment initiation exception', [
                 'message' => $e->getMessage(),
@@ -447,6 +464,13 @@ class CoursePaymentController extends Controller
     {
         $host = parse_url($url, PHP_URL_HOST);
 
-        return in_array($host, ['localhost', '127.0.0.1', '0.0.0.0'], true);
+        return in_array($host, ['localhost', '127.0.0.1', '0.0.0.0', '[::1]'], true);
+    }
+
+    private function isAllowedKhaltiHost(string $url): bool
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+
+        return in_array($host, $this->allowedKhaltiHosts, true);
     }
 }

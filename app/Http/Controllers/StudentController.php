@@ -91,7 +91,6 @@ class StudentController extends Controller
     {
         $user = Auth::user();
 
-        // Premium courses with a price must go through Khalti payment first.
         if ($course->requiresPayment()) {
             return redirect()->route('student.course.payment.initiate', $course);
         }
@@ -110,7 +109,6 @@ class StudentController extends Controller
         $user = Auth::user();
         $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
 
-        // Premium courses are only accessible after a verified, completed payment.
         if ($course->requiresPayment()) {
             $paid = CoursePayment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
@@ -139,6 +137,11 @@ class StudentController extends Controller
     public function watchLesson(Course $course, Lesson $lesson)
     {
         $user = Auth::user();
+
+        if ($lesson->course_id !== $course->id) {
+            abort(403);
+        }
+
         $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
         if (! $enrollment) {
             return redirect()->route('student.courses');
@@ -155,6 +158,11 @@ class StudentController extends Controller
     public function markComplete(Course $course, Lesson $lesson)
     {
         $user = Auth::user();
+
+        if ($lesson->course_id !== $course->id) {
+            abort(403);
+        }
+
         $videoProgress = LessonVideoProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
 
         if (! $videoProgress || $videoProgress->watch_percentage < 80) {
@@ -184,20 +192,23 @@ class StudentController extends Controller
 
         $next = $course->lessons()->where('order', '>', $lesson->order)->orderBy('order')->first();
         if ($next) {
-            return redirect()->route('student.lesson', [$course, $next])->with('success', 'Lesson completed! +20 points 🎉');
+            return redirect()->route('student.lesson', [$course, $next])->with('success', 'Lesson completed! +20 points ?');
         }
 
-        return redirect()->route('student.course.show', $course)->with('success', 'Course progress updated! +20 points 🎉');
+        return redirect()->route('student.course.show', $course)->with('success', 'Course progress updated! +20 points ?');
     }
 
     public function saveVideoProgress(Request $request, Course $course, Lesson $lesson)
     {
+        if ($lesson->course_id !== $course->id) {
+            abort(403);
+        }
+
         $request->validate([
             'watched_seconds' => 'required|integer|min:0',
             'duration_seconds' => 'required|integer|min:1',
             'watch_percentage' => 'required|integer|min:0|max:100',
         ]);
-
         $user = Auth::user();
         $duration = (int) $request->duration_seconds;
         $percentage = (int) $request->watch_percentage;
@@ -232,6 +243,10 @@ class StudentController extends Controller
 
     public function getVideoProgress(Course $course, Lesson $lesson)
     {
+        if ($lesson->course_id !== $course->id) {
+            abort(403);
+        }
+
         $user = Auth::user();
         $progress = LessonVideoProgress::where('user_id', $user->id)->where('lesson_id', $lesson->id)->first();
 
@@ -255,6 +270,11 @@ class StudentController extends Controller
     public function takeQuiz(Course $course, Quiz $quiz)
     {
         $user = Auth::user();
+
+        if ($quiz->course_id !== $course->id) {
+            abort(403);
+        }
+
         $questions = $quiz->questions()->with('options')->get();
         if ($questions->isEmpty()) {
             return redirect()->back()->with('error', 'This quiz has no questions yet.');
@@ -267,6 +287,11 @@ class StudentController extends Controller
     public function submitQuiz(Request $request, Course $course, Quiz $quiz)
     {
         $user = Auth::user();
+
+        if ($quiz->course_id !== $course->id) {
+            abort(403);
+        }
+
         $attempt = QuizAttempt::where('id', $request->attempt_id)->where('user_id', $user->id)->firstOrFail();
         $questions = $quiz->questions()->with('options')->get();
         $score = 0;
@@ -328,18 +353,31 @@ class StudentController extends Controller
 
     public function postDiscussion(Request $request, Course $course)
     {
+        $user = Auth::user();
+        $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $course->id)->first();
+        if (! $enrollment) {
+            return redirect()->route('student.courses')->with('error', 'You must be enrolled to post discussions.');
+        }
+
         $request->validate(['title' => 'required|max:255', 'body' => 'required']);
         DiscussionPost::create(['user_id' => Auth::id(), 'course_id' => $course->id, 'title' => $request->title, 'body' => $request->body]);
-        Auth::user()->increment('points', 5);
+        $user->increment('points', 5);
 
         return redirect()->route('student.discussion', $course)->with('success', 'Discussion posted! +5 points');
     }
 
     public function replyDiscussion(Request $request, DiscussionPost $post)
     {
+        $user = Auth::user();
+
+        $enrollment = Enrollment::where('user_id', $user->id)->where('course_id', $post->course_id)->first();
+        if (! $enrollment) {
+            return redirect()->back()->with('error', 'You must be enrolled in this course to reply.');
+        }
+
         $request->validate(['body' => 'required']);
         DiscussionReply::create(['post_id' => $post->id, 'user_id' => Auth::id(), 'body' => $request->body]);
-        Auth::user()->increment('points', 2);
+        $user->increment('points', 2);
 
         return redirect()->back()->with('success', 'Reply posted! +2 points');
     }

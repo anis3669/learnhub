@@ -253,6 +253,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $this->command->info('✅ Seeded! Login: admin@learnhub.com | teacher@learnhub.com | student@learnhub.com (password: password)');
+        $this->command->info('✅ Seeded! Default accounts created (check .env for credentials).');
     }
 }

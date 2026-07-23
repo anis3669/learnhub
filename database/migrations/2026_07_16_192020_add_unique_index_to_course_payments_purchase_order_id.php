@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,15 +14,15 @@ return new class extends Migration
                 return;
             }
 
-            $duplicates = \Illuminate\Support\Facades\DB::table('course_payments')
-                ->select('purchase_order_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+            $duplicates = DB::table('course_payments')
+                ->select('purchase_order_id', DB::raw('COUNT(*) as count'))
                 ->groupBy('purchase_order_id')
                 ->having('count', '>', 1)
                 ->get();
 
             if ($duplicates->isNotEmpty()) {
                 foreach ($duplicates as $duplicate) {
-                    \Illuminate\Support\Facades\DB::table('course_payments')
+                    DB::table('course_payments')
                         ->where('purchase_order_id', $duplicate->purchase_order_id)
                         ->where('status', '!=', 'pending')
                         ->update(['purchase_order_id' => null]);

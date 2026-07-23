@@ -310,6 +310,10 @@ class TeacherController extends Controller
 
     public function replyDiscussion(Request $request, DiscussionPost $post)
     {
+        if ($post->course->teacher_id !== Auth::id()) {
+            abort(403);
+        }
+
         $request->validate(['body' => 'required']);
         DiscussionReply::create(['post_id' => $post->id, 'user_id' => Auth::id(), 'body' => $request->body]);
 
